@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Order Tracker</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --success-color: #2ecc71;
+            --text-color: #333;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --sidebar-bg: #2c3e50;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Layout & Navigation */
+        .app-container {
+            display: flex;
+            width: 100%;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            color: white;
+            display: none; /* Hidden until logged in */
+            flex-direction: column;
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            transition: width 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .toggle-btn {
+            background: transparent !important;
+            width: auto !important;
+            padding: 0 5px;
+            font-size: 24px;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-item {
+            padding: 15px;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--primary-color);
+        }
+
+        /* Collapsed Sidebar Styles */
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        .sidebar.collapsed .nav-text, 
+        .sidebar.collapsed h2 { display: none; }
+        .sidebar.collapsed .sidebar-header { justify-content: center; }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            margin-left: 0; /* Adjusted via JS when sidebar is visible */
+            width: 100%;
+            transition: margin-left 0.3s;
+        }
+
+        /* Views */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        .tracker-container {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+        }
+
+        h2.section-title {
+            color: var(--text-color);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        /* Search Section */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 40px;
+            justify-content: center;
+        }
+
+        input[type="text"] {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        select, input[type="number"], input[type="date"], input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 12px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        /* Dashboard Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Order Details Section */
+        #order-details {
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.5s ease;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .order-info h3 {
+            margin: 0 0 5px 0;
+        }
+
+        .order-info p {
+            margin: 0;
+            color: #777;
+        }
+
+        /* Progress Steps */
+        .progress-track {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .progress-track::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: #eee;
+            z-index: 0;
+        }
+
+        .step {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            width: 25%;
+        }
+
+        .step-circle {
+            width: 34px;
+            height: 34px;
+            background-color: #fff;
+            border: 4px solid #eee;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #999;
+            transition: all 0.4s;
+        }
+
+        .step-label {
+            font-size: 14px;
+            color: #999;
+            font-weight: 500;
+        }
+
+        /* Active/Completed States */
+        .step.active .step-circle {
+            border-color: var(--primary-color);
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .step.completed .step-circle {
+            border-color: var(--success-color);
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .step.active .step-label, 
+        .step.completed .step-label {
+            color: var(--text-color);
+        }
+
+        /* Progress Bar Fill */
+        .progress-fill {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            height: 4px;
+            background-color: var(--success-color);
+            z-index: 0;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        /* Error Message */
+        .error-msg {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .status-1 { background-color: #95a5a6; } /* Placed */
+        .status-2 { background-color: #f39c12; } /* Processing */
+        .status-3 { background-color: #3498db; } /* Shipped */
+        .status-4 { background-color: #2ecc71; } /* Delivered */
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 600px) {
+            .sidebar {
+                width: 60px;
+                padding: 20px 5px;
+            }
+            .sidebar h2, .nav-text {
+                display: none;
+            }
+            .main-content {
+                margin-left: 60px !important; /* Override JS inline style if needed */
+            }
+            .search-box {
+                flex-direction: column;
+            }
+            input[type="text"] {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            button {
+                width: 100%;
+            }
+            .step-label {
+                font-size: 12px;
+            }
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            --text-color: #ecf0f1;
+            --bg-color: #2c3e50;
+            --card-bg: #34495e;
+            --sidebar-bg: #1a252f;
+        }
+        body.dark-mode .stat-card, 
+        body.dark-mode .table-container {
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        body.dark-mode th {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+        body.dark-mode td, 
+        body.dark-mode th,
+        body.dark-mode .order-header {
+            border-color: #465c71;
+        }
+        body.dark-mode tr:hover {
+            background-color: #2c3e50;
+        }
+        body.dark-mode input, 
+        body.dark-mode select {
+            background-color: #2c3e50;
+            border-color: #465c71;
+            color: #ecf0f1;
+        }
+        body.dark-mode .progress-track::before {
+            background-color: #465c71;
+        }
+        body.dark-mode .step-circle {
+            background-color: var(--card-bg);
+            border-color: #465c71;
+        }
+
+        /* Top Header & Profile Dropdown */
+        .top-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .profile-trigger {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .profile-trigger:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .profile-avatar {
+            width: 32px;
+            height: 32px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            width: 160px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
+            margin-top: 10px;
+            border: 1px solid #eee;
+        }
+
+        .dropdown-menu.show {
+            display: flex;
+        }
+
+        .dropdown-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: var(--text-color);
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--bg-color);
+        }
+
+        body.dark-mode .profile-trigger:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        body.dark-mode .dropdown-menu {
+            border-color: #465c71;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>OrderSys</h2>
+            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+        <div class="nav-item active" onclick="showView('dashboard')">
+            <span>📊</span> <span class="nav-text">Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="showView('create')">
+            <span>➕</span> <span class="nav-text">New Order</span>
+        </div>
+        <div class="nav-item" onclick="showView('list')">
+            <span>📋</span> <span class="nav-text">Order List</span>
+        </div>
+        <div class="nav-item" onclick="showView('tracker')">
+            <span>🔍</span> <span class="nav-text">Tracker</span>
+        </div>
+        <div class="nav-item" onclick="showView('report')">
+            <span>📈</span> <span class="nav-text">Reports</span>
+        </div>
+        <div class="nav-item" onclick="toggleDarkMode()">
+            <span>🌓</span> <span class="nav-text">Dark Mode</span>
+        </div>
+        <div class="nav-item" style="margin-top: auto;" onclick="logout()">
+            <span>🚪</span> <span class="nav-text">Logout</span>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+        
+        <!-- Top Header (Profile) -->
+        <header id="topHeader" class="top-header" style="display: none;">
+            <div class="profile-dropdown">
+                <div class="profile-trigger" onclick="toggleProfileMenu(event)">
+                    <div class="profile-avatar">A</div>
+                    <span class="profile-name">Admin</span>
+                    <span>▼</span>
+                </div>
+                <div class="dropdown-menu" id="profileMenu">
+                    <div class="dropdown-item" onclick="alert('Profile Settings')">Settings</div>
+                    <div class="dropdown-item" onclick="logout()">Logout</div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- 1. Login View -->
+        <section id="login-view" class="view-section active">
+            <div class="tracker-container" style="max-width: 400px; margin-top: 50px;">
+                <h1>Admin Login</h1>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="admin">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="admin">
+                </div>
+                <button class="btn-block" onclick="login()">Login</button>
+                <p id="loginError" class="error-msg">Invalid credentials</p>
+            </div>
+        </section>
+
+        <!-- 2. Dashboard View -->
+        <section id="dashboard-view" class="view-section">
+            <h2 class="section-title">Dashboard</h2>
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <h3>Total Orders</h3>
+                    <div class="stat-number" id="dash-total">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending</h3>
+                    <div class="stat-number" id="dash-pending" style="color: #f39c12">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivered</h3>
+                    <div class="stat-number" id="dash-delivered" style="color: #2ecc71">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Revenue</h3>
+                    <div class="stat-number" id="dash-revenue">$0</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Create Order View -->
+        <section id="create-view" class="view-section">
+            <div class="tracker-container">
+                <h1>Create New Order</h1>
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="newCustomerName" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Order Date</label>
+                    <input type="date" id="newOrderDate">
+                </div>
+                <div class="form-group">
+                    <label>Total Amount ($)</label>
+                    <input type="number" id="newOrderTotal" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Number of Items</label>
+                    <input type="number" id="newOrderItems" placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="newOrderStatus">
+                        <option value="1">Placed</option>
+                        <option value="2">Processing</option>
+                        <option value="3">Shipped</option>
+                        <option value="4">Delivered</option>
+                    </select>
+                </div>
+                <button class="btn-block" onclick="createNewOrder()">Create Order</button>
+            </div>
+        </section>
+
+        <!-- 4. Order List View -->
+        <section id="list-view" class="view-section">
+            <h2 class="section-title">Order List</h2>
+            <div class="search-box" style="justify-content: space-between; margin-bottom: 20px;">
+                <input type="text" id="listSearchInput" placeholder="Filter by ID or Customer Name..." onkeyup="filterOrders()" style="flex: 1; margin-right: 10px;">
+                <button onclick="exportToCSV()" style="white-space: nowrap;">Export CSV</button>
+            </div>
+            <div class="table-container">
+                <table id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <button id="prevBtn" onclick="changePage(-1)">Previous</button>
+                <span id="pageInfo">Page 1 of 1</span>
+                <button id="nextBtn" onclick="changePage(1)">Next</button>
+            </div>
+        </section>
+
+        <!-- 5. Report View -->
+        <section id="report-view" class="view-section">
+            <h2 class="section-title">Reports</h2>
+            <div class="tracker-container">
+                <h3>Order Status Breakdown</h3>
+                <div id="report-content">
+                    <!-- Simple text report -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Tracker View (Original) -->
+        <section id="tracker-view" class="view-section">
+            <div class="tracker-container">
+                <h1>Track Your Order</h1>
+                
+                <div class="search-box">
+                    <input type="text" id="orderInput" placeholder="Enter Order ID (e.g., 1001)">
+                    <button onclick="trackOrder()">Track Order</button>
+                </div>
+
+                <p id="errorMsg" class="error-msg">Order not found. Please check your ID.</p>
+
+                <div id="order-details">
+                    <div class="order-header">
+                        <div class="order-info">
+                            <h3>Order <span id="displayId">#</span></h3>
+                            <p>Date: <span id="displayDate"></span></p>
+                        </div>
+                        <div class="order-info" style="text-align: right;">
+                            <h3>Total: <span id="displayTotal"></span></h3>
+                            <p id="displayItems">Items: 0</p>
+                        </div>
+                    </div>
+
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFill"></div>
+                        <div class="step" id="step1">
+                            <div class="step-circle">1</div>
+                            <div class="step-label">Placed</div>
+                        </div>
+                        <div class="step" id="step2">
+                            <div class="step-circle">2</div>
+                            <div class="step-label">Processing</div>
+                        </div>
+                        <div class="step" id="step3">
+                            <div class="step-circle">3</div>
+                            <div class="step-label">Shipped</div>
+                        </div>
+                        <div class="step" id="step4">
+                            <div class="step-circle">4</div>
+                            <div class="step-label">Delivered</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script>
+    // Mock Database
+    let orders = {
+        '1001': { id: '1001', customer: 'Alice Smith', status: 4, date: '2023-10-28', total: 120.50, items: 3 },
+        '1002': { id: '1002', customer: 'Bob Jones', status: 3, date: '2023-11-02', total: 45.00, items: 1 },
+        '1003': { id: '1003', customer: 'Charlie Day', status: 2, date: '2023-11-05', total: 210.99, items: 5 },
+        '1004': { id: '1004', customer: 'Dana White', status: 1, date: '2023-11-10', total: 15.00, items: 1 }
+    };
+    let currentPage = 1;
+    const itemsPerPage = 5;
+
+    // --- Navigation & Auth ---
+
+    function login() {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+        
+        if (user === 'admin' && pass === 'admin') {
+            document.getElementById('sidebar').style.display = 'flex';
+            document.getElementById('mainContent').style.marginLeft = '250px';
+            document.getElementById('topHeader').style.display = 'flex';
+            showView('dashboard');
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+        }
+    }
+
+    function logout() {
+        document.getElementById('sidebar').style.display = 'none';
+        document.getElementById('mainContent').style.marginLeft = '0';
+        document.getElementById('topHeader').style.display = 'none';
+        showView('login');
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    }
+
+    function showView(viewName) {
+        // Hide all views
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        // Show selected
+        document.getElementById(viewName + '-view').classList.add('active');
+        
+        // Update Sidebar Active State
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        // Find the nav item that calls this view (simple matching)
+        const navItems = document.querySelectorAll('.nav-item');
+        if(viewName === 'dashboard') navItems[0].classList.add('active');
+        if(viewName === 'create') navItems[1].classList.add('active');
+        if(viewName === 'list') navItems[2].classList.add('active');
+        if(viewName === 'tracker') navItems[3].classList.add('active');
+        if(viewName === 'report') navItems[4].classList.add('active');
+
+        // Refresh data if needed
+        if (viewName === 'dashboard') updateDashboard();
+        if (viewName === 'list') {
+            if(document.getElementById('listSearchInput')) document.getElementById('listSearchInput').value = '';
+            currentPage = 1;
+            renderOrderList();
+        }
+        if (viewName === 'report') generateReport();
+    }
+
+    // --- Dashboard Logic ---
+    function updateDashboard() {
+        const orderList = Object.values(orders);
+        document.getElementById('dash-total').innerText = orderList.length;
+        document.getElementById('dash-pending').innerText = orderList.filter(o => o.status < 4).length;
+        document.getElementById('dash-delivered').innerText = orderList.filter(o => o.status === 4).length;
+        
+        const revenue = orderList.reduce((acc, curr) => acc + curr.total, 0);
+        document.getElementById('dash-revenue').innerText = '$' + revenue.toFixed(2);
+    }
+
+    // --- Create Order Logic ---
+    function createNewOrder() {
+        const id = '100' + (Object.keys(orders).length + 1);
+        const customer = document.getElementById('newCustomerName').value;
+        const date = document.getElementById('newOrderDate').value || new Date().toISOString().split('T')[0];
+        const total = parseFloat(document.getElementById('newOrderTotal').value) || 0;
+        const items = parseInt(document.getElementById('newOrderItems').value) || 1;
+        const status = parseInt(document.getElementById('newOrderStatus').value);
+
+        if (!customer) { alert('Customer Name is required'); return; }
+
+        orders[id] = { id, customer, date, total, items, status };
+        
+        alert('Order Created! ID: ' + id);
+        // Reset form
+        document.getElementById('newCustomerName').value = '';
+        document.getElementById('newOrderTotal').value = '';
+        showView('list');
+    }
+
+    // --- List Logic ---
+    function renderOrderList() {
+        const tbody = document.querySelector('#ordersTable tbody');
+        tbody.innerHTML = '';
+        
+        const query = document.getElementById('listSearchInput') ? document.getElementById('listSearchInput').value.toLowerCase() : '';
+        const statusLabels = { 1: 'Placed', 2: 'Processing', 3: 'Shipped', 4: 'Delivered' };
+
+        let allOrders = Object.values(orders);
+        
+        // Filter
+        let filteredOrders = allOrders.filter(order => {
+            const id = order.id.toLowerCase();
+            const customer = order.customer.toLowerCase();
+            return id.includes(query) || customer.includes(query);
+        });
+
+        // Paginate
+        const totalPages = Math.ceil(filteredOrders.length / itemsPerPage) || 1;
+        
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+        paginatedOrders.forEach(order => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>#${order.id}</td>
+                <td>${order.customer}</td>
+                <td>${order.date}</td>
+                <td>$${order.total.toFixed(2)}</td>
+                <td><span class="status-badge status-${order.status}">${statusLabels[order.status]}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Update Pagination Controls
+        document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prevBtn').disabled = currentPage === 1;
+        document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+    }
+
+    function changePage(direction) {
+        currentPage += direction;
+        renderOrderList();
+    }
+
+    // --- Report Logic ---
+    function generateReport() {
+        const orderList = Object.values(orders);
+        const counts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+        orderList.forEach(o => counts[o.status]++);
+
+        const html = `
+            <p><strong>Placed:</strong> ${counts[1]}</p>
+            <p><strong>Processing:</strong> ${counts[2]}</p>
+            <p><strong>Shipped:</strong> ${counts[3]}</p>
+            <p><strong>Delivered:</strong> ${counts[4]}</p>
+            <hr>
+            <p><strong>Total Orders:</strong> ${orderList.length}</p>
+        `;
+        document.getElementById('report-content').innerHTML = html;
+    }
+
+    // --- Tracker Logic (Original) ---
+    function trackOrder() {
+        const input = document.getElementById('orderInput').value.trim();
+        const detailsDiv = document.getElementById('order-details');
+        const errorMsg = document.getElementById('errorMsg');
+        
+        // Reset UI
+        detailsDiv.style.display = 'none';
+        errorMsg.style.display = 'none';
+
+        if (orders[input]) {
+            const order = orders[input];
+            
+            // Populate Data
+            document.getElementById('displayId').innerText = '#' + input;
+            document.getElementById('displayDate').innerText = order.date;
+            document.getElementById('displayTotal').innerText = '$' + order.total.toFixed(2);
+            document.getElementById('displayItems').innerText = order.items + (order.items > 1 ? ' Items' : ' Item');
+
+            // Update Progress Bar
+            updateProgress(order.status);
+
+            // Show Details
+            detailsDiv.style.display = 'block';
+        } else {
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    function updateProgress(statusLevel) {
+        // Reset all steps
+        for (let i = 1; i <= 4; i++) {
+            const step = document.getElementById('step' + i);
+            step.classList.remove('active', 'completed');
+            step.querySelector('.step-circle').innerHTML = i;
+        }
+
+        // Calculate width for the progress line (3 gaps between 4 steps = 33.3% per gap)
+        // Level 1: 0%, Level 2: 33%, Level 3: 66%, Level 4: 100%
+        const widthPercentage = (statusLevel - 1) * 33.33;
+        document.getElementById('progressFill').style.width = widthPercentage + '%';
+
+        // Apply classes
+        for (let i = 1; i <= 4; i++) {
+            const step = document.getElementById('step' + i);
+            if (i < statusLevel) {
+                step.classList.add('completed');
+                step.querySelector('.step-circle').innerHTML = '&#10003;'; // Checkmark
+            } else if (i === statusLevel) {
+                step.classList.add('active');
+            }
+        }
+    }
+
+    function toggleDarkMode() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+    }
+
+    // Initialize Dark Mode from LocalStorage
+    (function() {
+        const savedMode = localStorage.getItem('darkMode');
+        if (savedMode === 'enabled') {
+            document.body.classList.add('dark-mode');
+        }
+    })();
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        sidebar.classList.toggle('collapsed');
+        
+        // Adjust margin based on state
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        mainContent.style.marginLeft = isCollapsed ? '70px' : '250px';
+    }
+
+    function toggleProfileMenu(e) {
+        if(e) e.stopPropagation();
+        document.getElementById('profileMenu').classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    window.onclick = function(event) {
+        if (!event.target.closest('.profile-trigger')) {
+            const dropdowns = document.getElementsByClassName("dropdown-menu");
+            for (let i = 0; i < dropdowns.length; i++) {
+                dropdowns[i].classList.remove('show');
+            }
+        }
+    }
+
+    function filterOrders() {
+        currentPage = 1;
+        renderOrderList();
+    }
+
+    function exportToCSV() {
+        const orderList = Object.values(orders);
+        if (orderList.length === 0) {
+            alert("No orders to export.");
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "ID,Customer Name,Date,Total,Items,Status\n";
+
+        const statusLabels = { 1: 'Placed', 2: 'Processing', 3: 'Shipped', 4: 'Delivered' };
+
+        orderList.forEach(order => {
+            const row = [
+                order.id,
+                `"${order.customer}"`,
+                order.date,
+                order.total.toFixed(2),
+                order.items,
+                statusLabels[order.status]
+            ].join(",");
+            csvContent += row + "\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "orders_export.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+</body>
+</html>
