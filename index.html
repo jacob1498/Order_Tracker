@@ -240,7 +240,7 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             max-width: 100%;
-            max-height: 70vh;
+            max-height: 75vh;
             overflow-y: auto;
             position: relative;
         }
@@ -256,6 +256,7 @@
             z-index: 20;
             cursor: pointer;
             user-select: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         /* Sticky Columns */
@@ -853,6 +854,28 @@
         body.table-only-mode #darkModeToggleBtn {
             display: block;
         }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            backdrop-filter: blur(2px);
+        }
+        
+        #loading-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -867,14 +890,8 @@
         <div class="nav-item active" onclick="showView('dashboard')">
             <span>📊</span> <span class="nav-text">Dashboard</span>
         </div>
-        <div class="nav-item" onclick="showView('create')">
-            <span>➕</span> <span class="nav-text">New Order</span>
-        </div>
         <div class="nav-item" onclick="showView('list')">
             <span>📋</span> <span class="nav-text">Order List</span>
-        </div>
-        <div class="nav-item" onclick="showView('tracker')">
-            <span>🔍</span> <span class="nav-text">Tracker</span>
         </div>
         <div class="nav-item" onclick="showView('report')">
             <span>📈</span> <span class="nav-text">Reports</span>
@@ -947,39 +964,6 @@
             </div>
         </section>
 
-        <!-- 3. Create Order View -->
-        <section id="create-view" class="view-section">
-            <div class="tracker-container">
-                <h1>Create New Order</h1>
-                <div class="form-group">
-                    <label>Customer Name</label>
-                    <input type="text" id="newCustomerName" placeholder="John Doe">
-                </div>
-                <div class="form-group">
-                    <label>Order Date</label>
-                    <input type="date" id="newOrderDate">
-                </div>
-                <div class="form-group">
-                    <label>Total Amount (₱)</label>
-                    <input type="number" id="newOrderTotal" placeholder="0.00">
-                </div>
-                <div class="form-group">
-                    <label>Number of Items</label>
-                    <input type="number" id="newOrderItems" placeholder="1">
-                </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="newOrderStatus">
-                        <option value="1">Placed</option>
-                        <option value="2">Processing</option>
-                        <option value="3">Shipped</option>
-                        <option value="4">Delivered</option>
-                    </select>
-                </div>
-                <button class="btn-block" onclick="createNewOrder()">Create Order</button>
-            </div>
-        </section>
-
         <!-- 4. Order List View -->
         <section id="list-view" class="view-section">
             <button id="exitTableViewBtn" onclick="toggleTableView()">Exit Fullscreen</button>
@@ -1003,6 +987,7 @@
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
                     <button onclick="toggleTableView()" style="white-space: nowrap; background-color: #3498db;">Table View</button>
                     <button onclick="document.getElementById('csvUpload').click()" style="white-space: nowrap; background-color: #27ae60;">Import CSV</button>
+                    <button onclick="pasteCSVImport()" style="white-space: nowrap; background-color: #2ecc71;">Paste CSV</button>
                     <input type="file" id="csvUpload" accept=".csv" style="display: none;" onchange="handleFileUpload(this)">
                     <button onclick="downloadSampleCSV()" style="white-space: nowrap; background-color: #8e44ad;">Sample CSV</button>
                     <button onclick="exportToCSV()" style="white-space: nowrap;">Export CSV</button>
@@ -1148,6 +1133,12 @@
                         <button onclick="applyTheme('pastel')">Pastel</button>
                     </div>
                 </div>
+                <h3 style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">Data Management</h3>
+                <div class="form-group">
+                    <label>Clear All Order Data</label>
+                    <p style="font-size: 14px; color: #777; margin-top: 0;">This will permanently delete all imported and created orders. This action cannot be undone.</p>
+                    <button onclick="clearAllData()" style="background-color: #e74c3c;">Clear All Data</button>
+                </div>
             </div>
         </section>
 
@@ -1179,59 +1170,18 @@
             </div>
         </section>
 
-        <!-- 6. Tracker View (Original) -->
-        <section id="tracker-view" class="view-section">
-            <div class="tracker-container">
-                <h1>Track Your Order</h1>
-                
-                <div class="search-box">
-                    <input type="text" id="orderInput" placeholder="Enter Order ID (e.g., 1001)">
-                    <button onclick="trackOrder()">Track Order</button>
-                </div>
-
-                <p id="errorMsg" class="error-msg">Order not found. Please check your ID.</p>
-
-                <div id="order-details">
-                    <div class="order-header">
-                        <div class="order-info">
-                            <h3>Order <span id="displayId">#</span></h3>
-                            <p>Date: <span id="displayDate"></span></p>
-                        </div>
-                        <div class="order-info" style="text-align: right;">
-                            <h3>Total: <span id="displayTotal"></span></h3>
-                            <p id="displayItems">Items: 0</p>
-                        </div>
-                    </div>
-
-                    <div class="progress-track">
-                        <div class="progress-fill" id="progressFill"></div>
-                        <div class="step" id="step1">
-                            <div class="step-circle">1</div>
-                            <div class="step-label">Placed</div>
-                        </div>
-                        <div class="step" id="step2">
-                            <div class="step-circle">2</div>
-                            <div class="step-label">Processing</div>
-                        </div>
-                        <div class="step" id="step3">
-                            <div class="step-circle">3</div>
-                            <div class="step-label">Shipped</div>
-                        </div>
-                        <div class="step" id="step4">
-                            <div class="step-circle">4</div>
-                            <div class="step-label">Delivered</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
     </main>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay">
+    <div class="spinner" style="width: 40px; height: 40px; border-width: 4px; margin-bottom: 15px;"></div>
+    <h3>Processing Data...</h3>
 </div>
 
 <script>
     // Mock Database
-    let orders = {
+    let orders = JSON.parse(localStorage.getItem('ordersData')) || {
         '1001': { id: '1001', customer: 'Alice Smith', status: 4, date: '2023-10-28', total: 120.50, items: 3 },
         '1002': { id: '1002', customer: 'Bob Jones', status: 3, date: '2023-11-02', total: 45.00, items: 1 },
         '1003': { id: '1003', customer: 'Charlie Day', status: 2, date: '2023-11-05', total: 210.99, items: 5 },
@@ -1287,6 +1237,10 @@
     
     function getUserData() {
         return JSON.parse(localStorage.getItem('userProfile')) || defaultUser;
+    }
+
+    function saveOrdersToStorage() {
+        localStorage.setItem('ordersData', JSON.stringify(orders));
     }
 
     // --- Navigation & Auth ---
@@ -1438,10 +1392,8 @@
         // Find the nav item that calls this view (simple matching)
         const navItems = document.querySelectorAll('.nav-item');
         if(viewName === 'dashboard') navItems[0].classList.add('active');
-        if(viewName === 'create') navItems[1].classList.add('active');
-        if(viewName === 'list') navItems[2].classList.add('active');
-        if(viewName === 'tracker') navItems[3].classList.add('active');
-        if(viewName === 'report') navItems[4].classList.add('active');
+        if(viewName === 'list') navItems[1].classList.add('active');
+        if(viewName === 'report') navItems[2].classList.add('active');
         
         // Populate Profile View if selected
         if (viewName === 'profile') {
@@ -1489,26 +1441,6 @@
         
         const revenue = orderList.reduce((acc, curr) => acc + curr.total, 0);
         document.getElementById('dash-revenue').innerText = '₱' + revenue.toFixed(2);
-    }
-
-    // --- Create Order Logic ---
-    function createNewOrder() {
-        const id = '100' + (Object.keys(orders).length + 1);
-        const customer = document.getElementById('newCustomerName').value;
-        const date = document.getElementById('newOrderDate').value || new Date().toISOString().split('T')[0];
-        const total = parseFloat(document.getElementById('newOrderTotal').value) || 0;
-        const items = parseInt(document.getElementById('newOrderItems').value) || 1;
-        const status = parseInt(document.getElementById('newOrderStatus').value);
-
-        if (!customer) { alert('Customer Name is required'); return; }
-
-        orders[id] = { id, customer, date, total, items, status };
-        
-        alert('Order Created! ID: ' + id);
-        // Reset form
-        document.getElementById('newCustomerName').value = '';
-        document.getElementById('newOrderTotal').value = '';
-        showView('list');
     }
 
     // --- List Logic ---
@@ -1679,6 +1611,7 @@
         
         renderOrderList();
         updateDashboard();
+        saveOrdersToStorage();
         showNotification('Order updated successfully!');
     }
 
@@ -1845,13 +1778,13 @@
             tr.ondrop = (e) => handleDrop(e, 'row', rIndex);
             tr.ondragend = handleDragEnd;
 
-            let html = `<td contenteditable="true" class="chart-label" data-placeholder="Item Name" oninput="updateRowLabel(${rIndex}, this.innerText)">${row.label}</td>`;
+            let html = `<td contenteditable="true" class="chart-label" data-placeholder="Item Name" oninput="updateRowLabel(${rIndex}, this.innerText)" onpaste="handleManualPaste(event, ${rIndex}, -1)">${row.label}</td>`;
             
             // Sync values length
             while(row.values.length < manualChartState.headers.length) row.values.push('');
             
             row.values.forEach((val, cIndex) => {
-                html += `<td contenteditable="true" class="chart-value" data-placeholder="0" oninput="updateRowValue(${rIndex}, ${cIndex}, this.innerText)">${val}</td>`;
+                html += `<td contenteditable="true" class="chart-value" data-placeholder="0" oninput="updateRowValue(${rIndex}, ${cIndex}, this.innerText)" onpaste="handleManualPaste(event, ${rIndex}, ${cIndex})">${val}</td>`;
             });
             
             html += `<td><button onclick="removeManualRow(${rIndex})" style="background-color: #e74c3c; padding: 8px;">X</button></td>`;
@@ -1985,6 +1918,40 @@
         saveManualData();
     }
 
+    function handleManualPaste(e, startRow, startCol) {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        if (!text) return;
+
+        const rows = text.split(/\r\n|\n|\r/).filter(r => r.trim());
+        
+        rows.forEach((rowStr, i) => {
+            const currentRowIdx = startRow + i;
+            // Detect delimiter (Tab for Excel, Comma for CSV)
+            let cols = rowStr.split('\t');
+            if (cols.length === 1 && rowStr.includes(',')) {
+                cols = rowStr.split(',');
+            }
+            
+            // Add new row if needed
+            if (!manualChartState.rows[currentRowIdx]) {
+                const emptyVals = new Array(manualChartState.headers.length).fill('');
+                manualChartState.rows.push({ label: '', values: emptyVals });
+            }
+
+            cols.forEach((val, j) => {
+                const currentColIdx = startCol + j;
+                
+                if (currentColIdx === -1) {
+                    manualChartState.rows[currentRowIdx].label = val.trim();
+                } else if (currentColIdx >= 0 && currentColIdx < manualChartState.headers.length) {
+                    manualChartState.rows[currentRowIdx].values[currentColIdx] = val.trim();
+                }
+            });
+        });
+        saveAndRender();
+    }
+
     function saveAndRender() {
         saveManualData();
         renderManualTable();
@@ -2086,60 +2053,6 @@
         });
     }
 
-    // --- Tracker Logic (Original) ---
-    function trackOrder() {
-        const input = document.getElementById('orderInput').value.trim();
-        const detailsDiv = document.getElementById('order-details');
-        const errorMsg = document.getElementById('errorMsg');
-        
-        // Reset UI
-        detailsDiv.style.display = 'none';
-        errorMsg.style.display = 'none';
-
-        if (orders[input]) {
-            const order = orders[input];
-            
-            // Populate Data
-            document.getElementById('displayId').innerText = '#' + input;
-            document.getElementById('displayDate').innerText = order.date;
-            document.getElementById('displayTotal').innerText = '₱' + order.total.toFixed(2);
-            document.getElementById('displayItems').innerText = order.items + (order.items > 1 ? ' Items' : ' Item');
-
-            // Update Progress Bar
-            updateProgress(order.status);
-
-            // Show Details
-            detailsDiv.style.display = 'block';
-        } else {
-            errorMsg.style.display = 'block';
-        }
-    }
-
-    function updateProgress(statusLevel) {
-        // Reset all steps
-        for (let i = 1; i <= 4; i++) {
-            const step = document.getElementById('step' + i);
-            step.classList.remove('active', 'completed');
-            step.querySelector('.step-circle').innerHTML = i;
-        }
-
-        // Calculate width for the progress line (3 gaps between 4 steps = 33.3% per gap)
-        // Level 1: 0%, Level 2: 33%, Level 3: 66%, Level 4: 100%
-        const widthPercentage = (statusLevel - 1) * 33.33;
-        document.getElementById('progressFill').style.width = widthPercentage + '%';
-
-        // Apply classes
-        for (let i = 1; i <= 4; i++) {
-            const step = document.getElementById('step' + i);
-            if (i < statusLevel) {
-                step.classList.add('completed');
-                step.querySelector('.step-circle').innerHTML = '&#10003;'; // Checkmark
-            } else if (i === statusLevel) {
-                step.classList.add('active');
-            }
-        }
-    }
-
     // --- Theme Logic ---
     function applyTheme(themeName) {
         // Remove all theme classes
@@ -2165,6 +2078,17 @@
         if(density === 'compact') document.body.classList.add('view-compact');
         else document.body.classList.remove('view-compact');
         localStorage.setItem('viewDensity', density);
+    }
+
+    function clearAllData() {
+        if (confirm("Are you sure you want to delete ALL order data? This action cannot be undone.")) {
+            orders = {};
+            localStorage.removeItem('ordersData');
+            
+            // Update dashboard stats immediately
+            updateDashboard();
+            showNotification("All order data has been cleared.");
+        }
     }
 
     // Initialize Settings
@@ -2233,9 +2157,19 @@
         }
 
         let csvContent = "data:text/csv;charset=utf-8,";
+        // The header is static and matches the import format
         csvContent += "Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Tiktok Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,DF Claims Status,Del-Failed Reason,Return/Refund,RR Claims Status,Claims Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail\n";
 
         const statusLabels = { 1: 'Placed', 2: 'Processing', 3: 'Shipped', 4: 'Delivered' };
+
+        // Helper to safely get value and handle commas for CSV
+        const sanitize = (val) => {
+            if (val === undefined || val === null) return '';
+            const str = String(val);
+            // If the string contains a comma, wrap it in double quotes
+            if (str.includes(',')) return `"${str.replace(/"/g, '""')}"`;
+            return str;
+        };
 
         orderList.forEach(order => {
             const dateObj = new Date(order.date);
@@ -2243,46 +2177,47 @@
             const today = new Date();
             const ageing = Math.floor((today - dateObj) / (1000 * 60 * 60 * 24));
 
-            const row = [
+            const rowData = [
                 month,
                 order.date,
-                "-", // Ship Date Time
-                "-", // Delivery Date
+                order.shipDateTime,
+                order.deliveryDate,
                 ageing,
                 order.id,
-                "-", // Tiktok Order ID
+                order.tiktokId,
                 order.items,
-                "COD", // MOP
+                order.mop,
                 statusLabels[order.status],
-                "-", // SC Order Sub Status
-                "-", // OMM Customer Order Status
-                "-", // OMM Consignment Status
-                "-", // WINS Status
-                "-", // Sales/TLOG
-                "-", // RTS PO NO
-                "-", // RTS PO Status
-                "-", // Return Status
-                "-", // Return Reason
-                "-", // Cancel Reason
-                "-", // Physical Stocks
-                "-", // RTV Date Endorse to IC
-                "-", // Ticket Number
-                "-", // Date Filed
-                "-", // Feedback Date
-                "-", // DF Claims Status
-                "-", // Del-Failed Reason
-                "-", // Return/Refund
-                "-", // RR Claims Status
-                "-", // Claims Reason
-                "-", // Tracking No.
-                "-", // Logistics Del
-                "-", // Region
-                "-", // Province
-                "-", // Order Status Final Remarks
-                (order.total * 0.7).toFixed(2),
+                order.scSubStatus,
+                order.ommStatus,
+                order.ommConsignment,
+                order.winsStatus,
+                order.salesTlog,
+                order.rtsPoNo,
+                order.rtsPoStatus,
+                order.returnStatus,
+                order.returnReason,
+                order.cancelReason,
+                order.physicalStocks,
+                order.rtvDate,
+                order.ticketNumber,
+                order.dateFiled,
+                order.feedbackDate,
+                order.dfClaimsStatus,
+                order.delFailedReason,
+                order.returnRefund,
+                order.rrClaimsStatus,
+                order.claimsReason,
+                order.trackingNo,
+                order.logisticsDel,
+                order.region,
+                order.province,
+                order.remarks,
+                (order.cost !== undefined ? parseFloat(order.cost) : (order.total * 0.7)).toFixed(2),
                 order.total.toFixed(2)
-            ].join(",");
-            csvContent += row + "\n";
+            ].map(val => sanitize(val)).join(",");
+            
+            csvContent += rowData + "\n";
         });
 
         const encodedUri = encodeURI(csvContent);
@@ -2299,9 +2234,9 @@
         const headers = "Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Tiktok Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,DF Claims Status,Del-Failed Reason,Return/Refund,RR Claims Status,Claims Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail";
         
         const rows = [
-            "Oct,2023-10-01,-,-,25,ORD-001,-,2,COD,Delivered,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1050.00,1500.00",
-            "Oct,2023-10-05,-,-,20,ORD-002,-,1,COD,Shipped,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,595.35,850.50",
-            "Oct,2023-10-12,-,-,15,ORD-003,-,4,COD,Processing,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,2240.00,3200.00"
+            "Oct,2023-10-01,,,25,ORD-001,,2,COD,Delivered,,,,,,,,,,,,,,,,,,,,,,,,,,1050.00,1500.00",
+            "Oct,2023-10-05,,,20,ORD-002,,1,COD,Shipped,,,,,,,,,,,,,,,,,,,,,,,,,,595.35,850.50",
+            "Oct,2023-10-12,,,15,ORD-003,,4,COD,Processing,,,,,,,,,,,,,,,,,,,,,,,,,,2240.00,3200.00"
         ];
 
         const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + rows.join("\n");
@@ -2320,73 +2255,124 @@
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            const text = e.target.result;
-            const rows = text.split('\n').map(r => r.trim()).filter(r => r);
-            
-            if (rows.length < 2) {
-                alert('CSV file is empty or invalid.');
-                return;
-            }
-
-            let importedCount = 0;
-            // Start from index 1 to skip header
-            for (let i = 1; i < rows.length; i++) {
-                const cols = rows[i].split(',');
-                if (cols.length < 5) continue;
-
-                // Mapping based on the 37-column structure
-                const id = cols[5] ? cols[5].trim() : `IMP-${Date.now()}-${i}`;
-                const date = cols[1] ? cols[1].trim() : new Date().toISOString().split('T')[0];
-                const items = parseInt(cols[7]) || 1;
-                const total = parseFloat(cols[36]) || 0;
-                
-                let status = 1;
-                const statusText = cols[9] ? cols[9].toLowerCase().trim() : '';
-                if (statusText === 'placed') status = 1;
-                else if (statusText === 'processing') status = 2;
-                else if (statusText === 'shipped') status = 3;
-                else if (statusText === 'delivered') status = 4;
-
-                orders[id] = {
-                    id: id,
-                    customer: 'Imported User',
-                    date: date,
-                    total: total,
-                    items: items,
-                    status: status
-                };
-                importedCount++;
-            }
-
-            showNotification(`Successfully imported ${importedCount} orders.`);
-            renderOrderList();
-            updateDashboard();
+            processCSVData(e.target.result);
             input.value = ''; 
         };
         reader.readAsText(file);
     }
 
-    function showNotification(message) {
+    async function pasteCSVImport() {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (text) processCSVData(text);
+        } catch (err) {
+            // Fallback for browsers blocking clipboard access
+            const text = prompt("Please paste your CSV data here:");
+            if (text) processCSVData(text);
+        }
+    }
+
+    function processCSVData(text) {
+        // Show loading overlay
+        const loader = document.getElementById('loading-overlay');
+        loader.classList.add('active');
+
+        // Use setTimeout to allow the UI to render the loader before processing
+        setTimeout(() => {
+            try {
+                const rows = text.split(/\r\n|\n|\r/).map(r => r.trim()).filter(r => r);
+                
+                if (rows.length < 2) {
+                    throw new Error('CSV data is empty or invalid.');
+                }
+
+                let importedCount = 0;
+                // Start from index 1 to skip header
+                for (let i = 1; i < rows.length; i++) {
+                    // Support Tab (Excel) or Comma (CSV)
+                    let cols = rows[i].split('\t');
+                    if (cols.length === 1) cols = rows[i].split(',');
+
+                    // Need at least enough columns to reach ID (index 5)
+                    if (cols.length <= 5) continue;
+
+                    // Mapping based on the 37-column structure
+                    const id = cols[5] ? cols[5].trim() : `IMP-${Date.now()}-${i}`;
+                    
+                    const newOrder = { id: id, customer: 'Imported' };
+
+                    columnKeys.forEach((key, index) => {
+                        if (key && index < cols.length) {
+                            let val = cols[index] ? cols[index].trim() : '';
+                            if (val === '-') val = ''; // Treat placeholder '-' as an empty field
+                            
+                            if (key === 'items') val = parseInt(val) || 0;
+                            if (key === 'total' || key === 'cost') val = parseFloat(val) || 0;
+                            if (key === 'date' && !val) val = new Date().toISOString().split('T')[0];
+                            if (key === 'status') {
+                                const s = val.toLowerCase();
+                                if (s === 'placed' || val === '1') val = 1;
+                                else if (s === 'processing' || val === '2') val = 2;
+                                else if (s === 'shipped' || val === '3') val = 3;
+                                else if (s === 'delivered' || val === '4') val = 4;
+                                else val = 1;
+                            }
+                            newOrder[key] = val;
+                        }
+                    });
+
+                    orders[id] = newOrder;
+                    importedCount++;
+                }
+
+                saveOrdersToStorage();
+                renderOrderList();
+                updateDashboard();
+                showNotification(`Successfully imported ${importedCount} orders.`, 'success');
+            } catch (error) {
+                console.error(error);
+                showNotification(error.message || 'Failed to process CSV data.', 'error');
+            } finally {
+                // Hide loading overlay
+                loader.classList.remove('active');
+            }
+        }, 800); // Artificial delay (800ms) so user sees the animation
+    }
+
+    function showNotification(message, type = 'success') {
         const existing = document.getElementById('notification-toast');
         if (existing) document.body.removeChild(existing);
 
         const div = document.createElement('div');
         div.id = 'notification-toast';
+        
+        // Determine color based on type
+        const bgColor = type === 'error' ? '#e74c3c' : '#2ecc71';
+        
         div.style.cssText = `
             position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #2ecc71;
+            background-color: ${bgColor};
             color: white;
             padding: 12px 24px;
             border-radius: 4px;
             z-index: 10000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s ease;
         `;
         div.innerText = message;
         document.body.appendChild(div);
-        setTimeout(() => { if(document.body.contains(div)) document.body.removeChild(div); }, 3000);
+        
+        // Fade out and remove
+        setTimeout(() => { 
+            if(document.body.contains(div)) {
+                div.style.opacity = '0';
+                div.style.transition = 'opacity 0.5s';
+                setTimeout(() => { if(document.body.contains(div)) document.body.removeChild(div); }, 500);
+            } 
+        }, 3000);
     }
 
     // Initialize Sorting
