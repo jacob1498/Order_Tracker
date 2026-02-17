@@ -206,6 +206,25 @@
             background-color: #2980b9;
         }
 
+        /* Minimalist Icon Buttons */
+        .icon-btn {
+            background-color: transparent;
+            color: #7f8c8d;
+            border: 1px solid #e0e0e0;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            font-size: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-btn:hover {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
         .btn-block {
             width: 100%;
         }
@@ -260,21 +279,28 @@
         }
 
         /* Sticky Columns */
-        th:nth-child(1), td:nth-child(1) {
+        th:nth-child(1), td:nth-child(1) { /* Checkbox */
             position: sticky;
             left: 0;
+            z-index: 11;
+            width: 40px;
+            min-width: 40px;
+        }
+        th:nth-child(2), td:nth-child(2) { /* Month */
+            position: sticky;
+            left: 40px;
             z-index: 11;
             width: 50px;
             min-width: 50px;
         }
-        th:nth-child(2), td:nth-child(2) {
+        th:nth-child(3), td:nth-child(3) { /* Order Date */
             position: sticky;
-            left: 50px;
+            left: 90px;
             z-index: 11;
             border-right: 2px solid #eee;
         }
         /* Header Intersection */
-        thead th:nth-child(1), thead th:nth-child(2) {
+        thead th:nth-child(1), thead th:nth-child(2), thead th:nth-child(3) {
             z-index: 30;
         }
 
@@ -968,35 +994,34 @@
         <section id="list-view" class="view-section">
             <button id="exitTableViewBtn" onclick="toggleTableView()">Exit Fullscreen</button>
             <button id="darkModeToggleBtn" onclick="toggleDarkMode()">🌙 Dark Mode</button>
-            <h2 class="section-title">Order List</h2>
-            <div class="search-box" style="flex-direction: column; align-items: stretch; gap: 15px; margin-bottom: 20px;">
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <h2 class="section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;">
+                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 1 0 1 5.45v-7h3.45a8.3 8.3 0 0 0 4.78 3.22z"/>
+                </svg>
+            </h2>
+            <div class="search-box" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; flex: 1;">
                     <input type="text" id="filterId" placeholder="Order ID" onkeyup="filterOrders()" style="flex: 1; min-width: 120px;">
-                    <input type="text" id="filterCustomer" placeholder="Customer Name" onkeyup="filterOrders()" style="flex: 1; min-width: 150px;">
-                    <select id="filterStatus" onchange="filterOrders()" style="flex: 1; min-width: 120px;">
-                        <option value="">All Statuses</option>
-                        <option value="1">Placed</option>
-                        <option value="2">Processing</option>
-                        <option value="3">Shipped</option>
-                        <option value="4">Delivered</option>
-                    </select>
+                    <input type="text" id="filterStatus" placeholder="Status" onkeyup="filterOrders()" style="flex: 1; min-width: 120px;">
                     <input type="date" id="filterStartDate" onchange="filterOrders()" style="flex: 1; min-width: 130px;" title="Start Date">
                     <input type="date" id="filterEndDate" onchange="filterOrders()" style="flex: 1; min-width: 130px;" title="End Date">
-                    <button onclick="resetFilters()" style="background-color: #7f8c8d; width: auto; padding: 10px 15px;">Reset</button>
+                    <button onclick="resetFilters()" title="Reset Filters" class="icon-btn">🔄</button>
                 </div>
-                <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button onclick="toggleTableView()" style="white-space: nowrap; background-color: #3498db;">Table View</button>
-                    <button onclick="document.getElementById('csvUpload').click()" style="white-space: nowrap; background-color: #27ae60;">Import CSV</button>
-                    <button onclick="pasteCSVImport()" style="white-space: nowrap; background-color: #2ecc71;">Paste CSV</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="toggleTableView()" title="Table View" class="icon-btn">⛶</button>
+                    <button onclick="downloadSampleCSV()" title="Download Sample CSV" class="icon-btn">📄</button>
+                    <button onclick="document.getElementById('csvUpload').click()" title="Import CSV" class="icon-btn">📂</button>
+                    <button onclick="exportToCSV()" title="Export CSV" class="icon-btn">💾</button>
+                    <button onclick="deleteSelectedOrders()" title="Delete Selected" class="icon-btn">🗑️</button>
+                    <button onclick="clearAllData()" title="Clear All Data" class="icon-btn">❌</button>
                     <input type="file" id="csvUpload" accept=".csv" style="display: none;" onchange="handleFileUpload(this)">
-                    <button onclick="downloadSampleCSV()" style="white-space: nowrap; background-color: #8e44ad;">Sample CSV</button>
-                    <button onclick="exportToCSV()" style="white-space: nowrap;">Export CSV</button>
                 </div>
             </div>
             <div class="table-container">
                 <table id="ordersTable">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="selectAllOrders" onclick="toggleAllCheckboxes(this)"></th>
                             <th>Month</th>
                             <th>Order Date</th>
                             <th>Ship Date Time</th>
@@ -1041,16 +1066,17 @@
                     </tbody>
                 </table>
             </div>
-            <div class="pagination">
-                <select id="rowsPerPage" onchange="changeItemsPerPage()" style="width: auto; padding: 8px;">
+            <div class="pagination" style="position: relative;">
+                <select id="rowsPerPage" onchange="changeItemsPerPage()" style="width: auto; padding: 8px; position: absolute; left: 0;">
                     <option value="5">5 rows</option>
                     <option value="10">10 rows</option>
                     <option value="25">25 rows</option>
                     <option value="50">50 rows</option>
+                    <option value="100">100 rows</option>
                 </select>
-                <button id="prevBtn" onclick="changePage(-1)">Previous</button>
+                <button id="prevBtn" onclick="changePage(-1)" style="padding: 8px 12px;">Previous</button>
                 <span id="pageInfo">Page 1 of 1</span>
-                <button id="nextBtn" onclick="changePage(1)">Next</button>
+                <button id="nextBtn" onclick="changePage(1)" style="padding: 8px 12px;">Next</button>
             </div>
         </section>
 
@@ -1133,12 +1159,6 @@
                         <button onclick="applyTheme('pastel')">Pastel</button>
                     </div>
                 </div>
-                <h3 style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">Data Management</h3>
-                <div class="form-group">
-                    <label>Clear All Order Data</label>
-                    <p style="font-size: 14px; color: #777; margin-top: 0;">This will permanently delete all imported and created orders. This action cannot be undone.</p>
-                    <button onclick="clearAllData()" style="background-color: #e74c3c;">Clear All Data</button>
-                </div>
             </div>
         </section>
 
@@ -1182,10 +1202,10 @@
 <script>
     // Mock Database
     let orders = JSON.parse(localStorage.getItem('ordersData')) || {
-        '1001': { id: '1001', customer: 'Alice Smith', status: 4, date: '2023-10-28', total: 120.50, items: 3 },
-        '1002': { id: '1002', customer: 'Bob Jones', status: 3, date: '2023-11-02', total: 45.00, items: 1 },
-        '1003': { id: '1003', customer: 'Charlie Day', status: 2, date: '2023-11-05', total: 210.99, items: 5 },
-        '1004': { id: '1004', customer: 'Dana White', status: 1, date: '2023-11-10', total: 15.00, items: 1 }
+        '1001': { id: '1001', customer: 'Alice Smith', status: 'Delivered', date: '2023-10-28', total: 120.50, items: 3 },
+        '1002': { id: '1002', customer: 'Bob Jones', status: 'Shipped', date: '2023-11-02', total: 45.00, items: 1 },
+        '1003': { id: '1003', customer: 'Charlie Day', status: 'Processing', date: '2023-11-05', total: 210.99, items: 5 },
+        '1004': { id: '1004', customer: 'Dana White', status: 'Placed', date: '2023-11-10', total: 15.00, items: 1 }
     };
     let currentPage = 1;
     let itemsPerPage = 5;
@@ -1436,8 +1456,8 @@
     function updateDashboard() {
         const orderList = Object.values(orders);
         document.getElementById('dash-total').innerText = orderList.length;
-        document.getElementById('dash-pending').innerText = orderList.filter(o => o.status < 4).length;
-        document.getElementById('dash-delivered').innerText = orderList.filter(o => o.status === 4).length;
+        document.getElementById('dash-pending').innerText = orderList.filter(o => String(o.status).toLowerCase() !== 'delivered').length;
+        document.getElementById('dash-delivered').innerText = orderList.filter(o => String(o.status).toLowerCase() === 'delivered').length;
         
         const revenue = orderList.reduce((acc, curr) => acc + curr.total, 0);
         document.getElementById('dash-revenue').innerText = '₱' + revenue.toFixed(2);
@@ -1453,26 +1473,20 @@
 
         // Filters
         const fId = document.getElementById('filterId') ? document.getElementById('filterId').value.toLowerCase() : '';
-        const fCustomer = document.getElementById('filterCustomer') ? document.getElementById('filterCustomer').value.toLowerCase() : '';
         const fStatus = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : '';
         const fStart = document.getElementById('filterStartDate') ? document.getElementById('filterStartDate').value : '';
         const fEnd = document.getElementById('filterEndDate') ? document.getElementById('filterEndDate').value : '';
 
-        const statusLabels = { 1: 'Placed', 2: 'Processing', 3: 'Shipped', 4: 'Delivered' };
-
         let allOrders = Object.values(orders);
-        
+
         // Filter
         let filteredOrders = allOrders.filter(order => {
             const matchesId = order.id.toLowerCase().includes(fId);
-            const matchesCustomer = order.customer.toLowerCase().includes(fCustomer);
-            const matchesStatus = fStatus === '' || order.status.toString() === fStatus;
-            
+            const matchesStatus = fStatus === '' || String(order.status).toLowerCase().includes(fStatus.toLowerCase());
             let matchesDate = true;
             if (fStart) matchesDate = matchesDate && (order.date >= fStart);
             if (fEnd) matchesDate = matchesDate && (order.date <= fEnd);
-
-            return matchesId && matchesCustomer && matchesStatus && matchesDate;
+            return matchesId && matchesStatus && matchesDate;
         });
         
         // Sort
@@ -1504,6 +1518,7 @@
             const tr = document.createElement('tr');
             tr.ondblclick = () => enableEditRow(tr, order.id);
             tr.innerHTML = `
+                <td><input type="checkbox" class="order-checkbox" value="${order.id}"></td>
                 <td>${month}</td>
                 <td>${order.date}</td>
                 <td>${order.shipDateTime || '-'}</td>
@@ -1513,7 +1528,7 @@
                 <td>${order.tiktokId || '-'}</td>
                 <td>${order.items}</td>
                 <td>${order.mop || 'COD'}</td>
-                <td><span class="status-badge status-${order.status}">${statusLabels[order.status]}</span></td>
+                <td>${order.status}</td>
                 <td>${order.scSubStatus || '-'}</td>
                 <td>${order.ommStatus || '-'}</td>
                 <td>${order.ommConsignment || '-'}</td>
@@ -1555,12 +1570,12 @@
         if (tr.classList.contains('editing')) return;
         tr.classList.add('editing');
         
-        // Change Month cell (index 0) to save button
-        tr.cells[0].innerHTML = `<button onclick="saveEditRow(this, '${id}')" style="padding: 4px 8px; font-size: 12px; background-color: #2ecc71; border: none; border-radius: 3px; color: white; cursor: pointer;">💾</button>`;
+        // Change Month cell (index 1) to save button
+        tr.cells[1].innerHTML = `<button onclick="saveEditRow(this, '${id}')" style="padding: 4px 8px; font-size: 12px; background-color: #2ecc71; border: none; border-radius: 3px; color: white; cursor: pointer;">💾</button>`;
 
         // Loop through cells
-        for (let i = 1; i < tr.cells.length; i++) {
-            const key = columnKeys[i];
+        for (let i = 2; i < tr.cells.length; i++) {
+            const key = columnKeys[i-1];
             if (!key) continue; // Skip derived columns like Ageing
             if (key === 'id') continue; // Skip ID (keep read-only)
 
@@ -1568,27 +1583,15 @@
             // Get raw value from object to avoid parsing formatted HTML
             const currentVal = orders[id][key] !== undefined ? orders[id][key] : '';
             
-            if (key === 'status') {
-                cell.innerHTML = `
-                    <select class="edit-input">
-                        <option value="1" ${currentVal == 1 ? 'selected' : ''}>Placed</option>
-                        <option value="2" ${currentVal == 2 ? 'selected' : ''}>Processing</option>
-                        <option value="3" ${currentVal == 3 ? 'selected' : ''}>Shipped</option>
-                        <option value="4" ${currentVal == 4 ? 'selected' : ''}>Delivered</option>
-                    </select>
-                `;
-            } else {
-                let type = 'text';
-                if (key.includes('date') || key.includes('Date')) type = 'date';
-                if (key === 'items' || key === 'total' || key === 'cost') type = 'number';
-                
-                // Handle cost calculation default if editing for first time
-                let val = currentVal;
-                if (key === 'cost' && val === '') val = (orders[id].total * 0.7).toFixed(2);
+            let type = 'text';
+            if (key.includes('date') || key.includes('Date')) type = 'date';
+            if (key === 'items' || key === 'total' || key === 'cost') type = 'number';
+            
+            // Handle cost calculation default if editing for first time
+            let val = currentVal;
+            if (key === 'cost' && val === '') val = (orders[id].total * 0.7).toFixed(2);
 
-                cell.innerHTML = `<input type="${type}" class="edit-input" value="${val}">`;
-                cell.innerHTML = `<input type="${type}" class="edit-input" value="${String(val).replace(/"/g, '&quot;')}">`;
-            }
+            cell.innerHTML = `<input type="${type}" class="edit-input" value="${String(val).replace(/"/g, '&quot;')}">`;
         }
     }
 
@@ -1596,15 +1599,14 @@
         const tr = btn.closest('tr');
         const order = orders[id];
         
-        for (let i = 1; i < tr.cells.length; i++) {
-            const key = columnKeys[i];
+        for (let i = 2; i < tr.cells.length; i++) {
+            const key = columnKeys[i-1];
             if (!key || key === 'id') continue;
             
             const input = tr.cells[i].querySelector('input, select');
             if (input) {
                 let val = input.value;
                 if (input.type === 'number') val = parseFloat(val) || 0;
-                if (key === 'status') val = parseInt(val);
                 order[key] = val;
             }
         }
@@ -1613,6 +1615,38 @@
         updateDashboard();
         saveOrdersToStorage();
         showNotification('Order updated successfully!');
+    }
+
+    function toggleAllCheckboxes(source) {
+        const checkboxes = document.querySelectorAll('#ordersTable .order-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = source.checked;
+        });
+    }
+
+    function deleteSelectedOrders() {
+        const checkedBoxes = document.querySelectorAll('#ordersTable .order-checkbox:checked');
+        if (checkedBoxes.length === 0) {
+            showNotification("Please select orders to delete.", "error");
+            return;
+        }
+
+        if (confirm(`Are you sure you want to delete ${checkedBoxes.length} selected order(s)?`)) {
+            let deletedCount = 0;
+            checkedBoxes.forEach(checkbox => {
+                if (orders[checkbox.value]) {
+                    delete orders[checkbox.value];
+                    deletedCount++;
+                }
+            });
+            
+            if (deletedCount > 0) {
+                saveOrdersToStorage();
+                renderOrderList();
+                updateDashboard();
+                showNotification(`${deletedCount} order(s) deleted successfully.`, 'success');
+            }
+        }
     }
 
     function getValueForColumn(order, index) {
@@ -1662,7 +1696,6 @@
 
     function resetFilters() {
         if(document.getElementById('filterId')) document.getElementById('filterId').value = '';
-        if(document.getElementById('filterCustomer')) document.getElementById('filterCustomer').value = '';
         if(document.getElementById('filterStatus')) document.getElementById('filterStatus').value = '';
         if(document.getElementById('filterStartDate')) document.getElementById('filterStartDate').value = '';
         if(document.getElementById('filterEndDate')) document.getElementById('filterEndDate').value = '';
@@ -1684,17 +1717,14 @@
     // --- Report Logic ---
     function generateReport() {
         const orderList = Object.values(orders);
-        const counts = { 1: 0, 2: 0, 3: 0, 4: 0 };
-        orderList.forEach(o => counts[o.status]++);
+        const counts = {};
+        orderList.forEach(o => {
+            const s = o.status || 'Unknown';
+            counts[s] = (counts[s] || 0) + 1;
+        });
 
-        const html = `
-            <p><strong>Placed:</strong> ${counts[1]}</p>
-            <p><strong>Processing:</strong> ${counts[2]}</p>
-            <p><strong>Shipped:</strong> ${counts[3]}</p>
-            <p><strong>Delivered:</strong> ${counts[4]}</p>
-            <hr>
-            <p><strong>Total Orders:</strong> ${orderList.length}</p>
-        `;
+        let html = Object.entries(counts).map(([k, v]) => `<p><strong>${k}:</strong> ${v}</p>`).join('');
+        html += `<hr><p><strong>Total Orders:</strong> ${orderList.length}</p>`;
         document.getElementById('report-content').innerHTML = html;
     }
 
@@ -2160,8 +2190,6 @@
         // The header is static and matches the import format
         csvContent += "Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Tiktok Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,DF Claims Status,Del-Failed Reason,Return/Refund,RR Claims Status,Claims Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail\n";
 
-        const statusLabels = { 1: 'Placed', 2: 'Processing', 3: 'Shipped', 4: 'Delivered' };
-
         // Helper to safely get value and handle commas for CSV
         const sanitize = (val) => {
             if (val === undefined || val === null) return '';
@@ -2187,7 +2215,7 @@
                 order.tiktokId,
                 order.items,
                 order.mop,
-                statusLabels[order.status],
+                order.status,
                 order.scSubStatus,
                 order.ommStatus,
                 order.ommConsignment,
@@ -2261,17 +2289,6 @@
         reader.readAsText(file);
     }
 
-    async function pasteCSVImport() {
-        try {
-            const text = await navigator.clipboard.readText();
-            if (text) processCSVData(text);
-        } catch (err) {
-            // Fallback for browsers blocking clipboard access
-            const text = prompt("Please paste your CSV data here:");
-            if (text) processCSVData(text);
-        }
-    }
-
     function processCSVData(text) {
         // Show loading overlay
         const loader = document.getElementById('loading-overlay');
@@ -2309,14 +2326,6 @@
                             if (key === 'items') val = parseInt(val) || 0;
                             if (key === 'total' || key === 'cost') val = parseFloat(val) || 0;
                             if (key === 'date' && !val) val = new Date().toISOString().split('T')[0];
-                            if (key === 'status') {
-                                const s = val.toLowerCase();
-                                if (s === 'placed' || val === '1') val = 1;
-                                else if (s === 'processing' || val === '2') val = 2;
-                                else if (s === 'shipped' || val === '3') val = 3;
-                                else if (s === 'delivered' || val === '4') val = 4;
-                                else val = 1;
-                            }
                             newOrder[key] = val;
                         }
                     });
@@ -2351,9 +2360,9 @@
         
         div.style.cssText = `
             position: fixed;
-            bottom: 20px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
             background-color: ${bgColor};
             color: white;
             padding: 12px 24px;
