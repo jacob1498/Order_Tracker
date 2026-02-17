@@ -994,11 +994,26 @@
         <section id="list-view" class="view-section">
             <button id="exitTableViewBtn" onclick="toggleTableView()">Exit Fullscreen</button>
             <button id="darkModeToggleBtn" onclick="toggleDarkMode()">🌙 Dark Mode</button>
-            <h2 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;">
-                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 1 0 1 5.45v-7h3.45a8.3 8.3 0 0 0 4.78 3.22z"/>
-                </svg>
-            </h2>
+            
+            <div class="platform-tabs">
+                <button class="platform-tab active" onclick="switchPlatform('Tiktok')">
+                    <svg viewBox="0 0 24 24" fill="#000000"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 1 0 1 5.45v-7h3.45a8.3 8.3 0 0 0 4.78 3.22z"/></svg>
+                    <span class="platform-name">TikTok Shop</span>
+                </button>
+                <button class="platform-tab" onclick="switchPlatform('Shopee')">
+                    <svg viewBox="0 0 24 24" fill="#ee4d2d"><path d="M18.7 6.5C18.2 5.8 17.5 5.3 16.7 5C15.9 4.7 15.1 4.5 14.2 4.5C12.5 4.5 11 5.2 9.8 6.5C8.6 7.8 8 9.4 8 11.2V12.2H5.3C4.4 12.2 3.7 12.9 3.7 13.8V27.5C3.7 28.4 4.4 29.1 5.3 29.1H23.3C24.2 29.1 24.9 28.4 24.9 27.5V13.8C24.9 12.9 24.2 12.2 23.3 12.2H20.6V11.2C20.6 9.4 20 7.8 18.7 6.5ZM18.2 11.2H10.3V11.2C10.3 10 10.7 9 11.5 8.2C12.2 7.4 13.2 7 14.2 7C15.2 7 16.2 7.4 17 8.2C17.7 9 18.2 10 18.2 11.2Z" transform="scale(0.7) translate(4, -2)"/></svg>
+                    <span class="platform-name">Shopee</span>
+                </button>
+                <button class="platform-tab" onclick="switchPlatform('Lazada')">
+                    <svg viewBox="0 0 24 24" fill="#0f146d"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    <span class="platform-name">Lazada</span>
+                </button>
+                <button class="platform-tab" onclick="switchPlatform('Watsons')">
+                    <svg viewBox="0 0 24 24" fill="#009c9c"><path d="M4 4h4l3 10 3-10h4l-5 16h-4L9 8l-4 12H1L4 4z"/></svg>
+                    <span class="platform-name">Watsons</span>
+                </button>
+            </div>
+
             <div class="search-box" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px;">
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; flex: 1;">
                     <input type="text" id="filterId" placeholder="Order ID" onkeyup="filterOrders()" style="flex: 1; min-width: 120px;">
@@ -1028,7 +1043,7 @@
                             <th>Delivery Date</th>
                             <th>Ageing Days</th>
                             <th>Order Number</th>
-                            <th>Tiktok Order ID</th>
+                            <th id="platformIdHeader">Tiktok Order ID</th>
                             <th>Units Shipped</th>
                             <th>MOP</th>
                             <th>SC Order Status</th>
@@ -1202,10 +1217,13 @@
 <script>
     // Mock Database
     let orders = JSON.parse(localStorage.getItem('ordersData')) || {
-        '1001': { id: '1001', customer: 'Alice Smith', status: 'Delivered', date: '2023-10-28', total: 120.50, items: 3 },
-        '1002': { id: '1002', customer: 'Bob Jones', status: 'Shipped', date: '2023-11-02', total: 45.00, items: 1 },
-        '1003': { id: '1003', customer: 'Charlie Day', status: 'Processing', date: '2023-11-05', total: 210.99, items: 5 },
-        '1004': { id: '1004', customer: 'Dana White', status: 'Placed', date: '2023-11-10', total: 15.00, items: 1 }
+        '1001': { id: '1001', platform: 'Tiktok', customer: 'Alice Smith', status: 'Delivered', date: '2023-10-28', total: 120.50, items: 3 },
+        '1002': { id: '1002', platform: 'Tiktok', customer: 'Bob Jones', status: 'Shipped', date: '2023-11-02', total: 45.00, items: 1 },
+        '1003': { id: '1003', platform: 'Tiktok', customer: 'Charlie Day', status: 'Processing', date: '2023-11-05', total: 210.99, items: 5 },
+        '1004': { id: '1004', platform: 'Tiktok', customer: 'Dana White', status: 'Placed', date: '2023-11-10', total: 15.00, items: 1 },
+        '2001': { id: '2001', platform: 'Shopee', customer: 'Eve Polastri', status: 'Placed', date: '2023-11-12', total: 35.00, items: 2 },
+        '3001': { id: '3001', platform: 'Lazada', customer: 'Frank Castle', status: 'Shipped', date: '2023-11-14', total: 80.00, items: 1 },
+        '4001': { id: '4001', platform: 'Watsons', customer: 'Grace Shelby', status: 'Delivered', date: '2023-11-16', total: 25.50, items: 4 }
     };
     let currentPage = 1;
     let itemsPerPage = 5;
@@ -1440,6 +1458,8 @@
         if (viewName === 'dashboard') updateDashboard();
         if (viewName === 'list') {
             resetFilters();
+            // Ensure correct tab is active
+            switchPlatform(currentPlatform);
         }
         if (viewName === 'report') {
             generateReport();
@@ -1463,6 +1483,29 @@
         document.getElementById('dash-revenue').innerText = '₱' + revenue.toFixed(2);
     }
 
+    // --- Platform Logic ---
+    let currentPlatform = 'Tiktok';
+
+    function switchPlatform(platform) {
+        currentPlatform = platform;
+        
+        // Update UI Tabs
+        document.querySelectorAll('.platform-tab').forEach(tab => {
+            tab.classList.remove('active');
+            if(tab.innerText.includes(platform) || (platform === 'Tiktok' && tab.innerText.includes('TikTok'))) {
+                tab.classList.add('active');
+            }
+        });
+
+        // Update Header Text
+        const header = document.getElementById('platformIdHeader');
+        if(header) header.innerText = `${platform} Order ID`;
+
+        // Reset and Render
+        currentPage = 1;
+        renderOrderList();
+    }
+
     // --- List Logic ---
     function renderOrderList() {
         const tbody = document.querySelector('#ordersTable tbody');
@@ -1481,6 +1524,10 @@
 
         // Filter
         let filteredOrders = allOrders.filter(order => {
+            // Platform Filter
+            const p = order.platform || 'Tiktok';
+            if (p !== currentPlatform) return false;
+
             const matchesId = order.id.toLowerCase().includes(fId);
             const matchesStatus = fStatus === '' || String(order.status).toLowerCase().includes(fStatus.toLowerCase());
             let matchesDate = true;
@@ -2316,7 +2363,7 @@
                     // Mapping based on the 37-column structure
                     const id = cols[5] ? cols[5].trim() : `IMP-${Date.now()}-${i}`;
                     
-                    const newOrder = { id: id, customer: 'Imported' };
+                    const newOrder = { id: id, platform: currentPlatform, customer: 'Imported' };
 
                     columnKeys.forEach((key, index) => {
                         if (key && index < cols.length) {
