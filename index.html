@@ -2938,7 +2938,7 @@
 
         let csvContent = "data:text/csv;charset=utf-8,";
         // The header is static and matches the import format
-        csvContent += "Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Tiktok Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,DF Claims Status,Del-Failed Reason,Return/Refund,RR Claims Status,Claims Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail\n";
+        csvContent += "Platform,Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Tiktok Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,DF Claims Status,Del-Failed Reason,Return/Refund,RR Claims Status,Claims Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail\n";
 
         // Helper to safely get value and handle commas for CSV
         const sanitize = (val) => {
@@ -2956,6 +2956,7 @@
             const ageing = Math.floor((today - dateObj) / (1000 * 60 * 60 * 24));
 
             const rowData = [
+                order.platform,
                 month,
                 order.date,
                 order.shipDateTime,
@@ -3009,12 +3010,12 @@
 
     // --- Data Import/Export ---
     function downloadSampleCSV() {
-        const headers = "Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Tiktok Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,DF Claims Status,Del-Failed Reason,Return/Refund,RR Claims Status,Claims Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail";
+        const headers = "Platform,Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Tiktok Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,DF Claims Status,Del-Failed Reason,Return/Refund,RR Claims Status,Claims Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail";
         
         const rows = [
-            "Oct,2023-10-01,,,25,ORD-001,,2,COD,Delivered,,,,,,,,,,,,,,,,,,,,,,,,,,1050.00,1500.00",
-            "Oct,2023-10-05,,,20,ORD-002,,1,COD,Shipped,,,,,,,,,,,,,,,,,,,,,,,,,,595.35,850.50",
-            "Oct,2023-10-12,,,15,ORD-003,,4,COD,Processing,,,,,,,,,,,,,,,,,,,,,,,,,,2240.00,3200.00"
+            "Tiktok,Oct,2023-10-01,,,25,ORD-001,,2,COD,Delivered,,,,,,,,,,,,,,,,,,,,,,,,,,1050.00,1500.00",
+            "Shopee,Oct,2023-10-05,,,20,ORD-002,,1,COD,Shipped,,,,,,,,,,,,,,,,,,,,,,,,,,595.35,850.50",
+            "Lazada,Oct,2023-10-12,,,15,ORD-003,,4,COD,Processing,,,,,,,,,,,,,,,,,,,,,,,,,,2240.00,3200.00"
         ];
 
         const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + rows.join("\n");
@@ -3053,6 +3054,11 @@
                     throw new Error('CSV data is empty or invalid.');
                 }
 
+                // Detect Platform Column (Check first header)
+                const headerRow = rows[0].split(/,|\t/).map(h => h.trim().toLowerCase().replace(/"/g, ''));
+                const hasPlatformCol = headerRow[0] === 'platform';
+                const offset = hasPlatformCol ? 1 : 0;
+
                 let importedCount = 0;
                 // Start from index 1 to skip header
                 for (let i = 1; i < rows.length; i++) {
@@ -3060,17 +3066,29 @@
                     let cols = rows[i].split('\t');
                     if (cols.length === 1) cols = rows[i].split(',');
 
-                    // Need at least enough columns to reach ID (index 5)
-                    if (cols.length <= 5) continue;
+                    // Need at least enough columns to reach ID (index 5 + offset)
+                    if (cols.length <= (5 + offset)) continue;
 
                     // Mapping based on the 37-column structure
-                    const id = cols[5] ? cols[5].trim() : `IMP-${Date.now()}-${i}`;
+                    const idIdx = 5 + offset;
+                    const id = cols[idIdx] ? cols[idIdx].trim() : `IMP-${Date.now()}-${i}`;
                     
-                    const newOrder = { id: id, platform: currentPlatform, customer: 'Imported' };
+                    // Determine Platform
+                    let platform = currentPlatform;
+                    if (hasPlatformCol && cols[0]) {
+                        const pVal = cols[0].trim().toLowerCase();
+                        if (pVal.includes('tiktok')) platform = 'Tiktok';
+                        else if (pVal.includes('shopee')) platform = 'Shopee';
+                        else if (pVal.includes('lazada')) platform = 'Lazada';
+                        else if (pVal.includes('watson')) platform = 'Watsons';
+                    }
+                    
+                    const newOrder = { id: id, platform: platform, customer: 'Imported' };
 
                     columnKeys.forEach((key, index) => {
-                        if (key && index < cols.length) {
-                            let val = cols[index] ? cols[index].trim() : '';
+                        const colIndex = index + offset;
+                        if (key && colIndex < cols.length) {
+                            let val = cols[colIndex] ? cols[colIndex].trim() : '';
                             if (val === '-') val = ''; // Treat placeholder '-' as an empty field
                             
                             if (key === 'items') val = parseInt(val) || 0;
