@@ -274,7 +274,7 @@
 
         .stat-card {
             background: var(--card-bg);
-            padding: 24px;
+            padding: 16px;
             border-radius: 16px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.02);
             border: 1px solid rgba(0,0,0,0.05);
@@ -301,7 +301,7 @@
         }
 
         .stat-number {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
             color: var(--primary-color);
             margin: 0;
@@ -398,18 +398,18 @@
 
         .treemap-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 12px;
         }
 
         .treemap-item {
-            padding: 16px;
+            padding: 12px;
             border-radius: 12px;
             color: white;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            min-height: 110px;
+            min-height: 90px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             transition: transform 0.2s, box-shadow 0.2s;
             position: relative;
@@ -430,10 +430,10 @@
         .bg-invalid { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
         .bg-notclaims { background: linear-gradient(135deg, #34495e, #2c3e50); }
 
-        .tm-icon { font-size: 24px; margin-bottom: 8px; opacity: 0.9; }
+        .tm-icon { font-size: 20px; margin-bottom: 8px; opacity: 0.9; }
         .tm-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; opacity: 0.9; margin-bottom: auto; }
         .tm-stats { margin-top: 10px; }
-        .tm-count { font-size: 26px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+        .tm-count { font-size: 22px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
         .tm-amount { font-size: 13px; font-weight: 500; opacity: 0.95; }
         
         /* Decorative circle */
@@ -2281,7 +2281,7 @@
                 const claimsStatus = String(order.rrClaimsStatus || '').toLowerCase().trim();
                 let prefix = null;
                 if (winsStatus === 'delivery success') prefix = 'success';
-                else if (wins-status === 'delivery failed') prefix = 'failed';
+                else if (winsStatus === 'delivery failed') prefix = 'failed';
 
                 if (claimsStatus === 'pending') {
                     stats.pendingClaimsCount++;
