@@ -285,6 +285,47 @@
             margin: 10px 0;
         }
 
+        .stat-sub-number {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .platform-dashboard-title {
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 24px;
+            color: var(--text-color);
+            border-left: 4px solid var(--primary-color);
+            padding-left: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .platform-dashboard-title .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+
+        .platform-dashboard-title.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .platform-dashboard-title img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .dashboard-grid.hidden {
+            display: none;
+        }
+
         /* Tables */
         .table-container {
             overflow-x: auto;
@@ -342,12 +383,12 @@
             text-align: left;
             border: 1px solid #e0e0e0;
             white-space: nowrap;
-            font-size: 12px;
+            font-size: 11px;
             background-color: var(--card-bg);
         }
         th {
             background-color: #f8f9fa;
-            font-weight: 600;
+            font-weight: bold;
         }
         tr:hover td {
             background-color: #f9f9f9;
@@ -1008,23 +1049,121 @@
 
         <!-- 2. Dashboard View -->
         <section id="dashboard-view" class="view-section">
-            <h2 class="section-title">Dashboard</h2>
+            <h2 class="section-title">Dashboard Overview</h2>
             <div class="dashboard-grid">
                 <div class="stat-card">
                     <h3>Total Orders</h3>
                     <div class="stat-number" id="dash-total">0</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Pending</h3>
-                    <div class="stat-number" id="dash-pending" style="color: #f39c12">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Delivered</h3>
-                    <div class="stat-number" id="dash-delivered" style="color: #2ecc71">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Revenue</h3>
+                    <h3>Total Revenue</h3>
                     <div class="stat-number" id="dash-revenue">₱0</div>
+                </div>
+            </div>
+
+            <h2 class="section-title" style="margin-top: 30px;">Order Status in WINS by Platform</h2>
+
+            <!-- TikTok -->
+            <h3 class="platform-dashboard-title">
+            <h3 class="platform-dashboard-title" onclick="toggleSection(this)">
+                <img src="https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg" alt="TikTok Logo">
+                <span>TikTok</span>
+                <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <h3>Delivery Success (Count)</h3>
+                    <div class="stat-number" id="dash-tiktok-wins-success" style="color: #2ecc71;">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Success (Amount)</h3>
+                    <div class="stat-number" id="dash-tiktok-wins-success-total" style="color: #2ecc71;">₱0.00</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Failed (Count)</h3>
+                    <div class="stat-number" id="dash-tiktok-wins-failed" style="color: #e74c3c;">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Failed (Amount)</h3>
+                    <div class="stat-number" id="dash-tiktok-wins-failed-total" style="color: #e74c3c;">₱0.00</div>
+                </div>
+            </div>
+
+            <!-- Shopee -->
+            <h3 class="platform-dashboard-title">
+            <h3 class="platform-dashboard-title" onclick="toggleSection(this)">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/f/fe/Shopee.svg" alt="Shopee Logo">
+                <span>Shopee</span>
+                <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <h3>Delivery Success (Count)</h3>
+                    <div class="stat-number" id="dash-shopee-wins-success" style="color: #2ecc71;">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Success (Amount)</h3>
+                    <div class="stat-number" id="dash-shopee-wins-success-total" style="color: #2ecc71;">₱0.00</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Failed (Count)</h3>
+                    <div class="stat-number" id="dash-shopee-wins-failed" style="color: #e74c3c;">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Failed (Amount)</h3>
+                    <div class="stat-number" id="dash-shopee-wins-failed-total" style="color: #e74c3c;">₱0.00</div>
+                </div>
+            </div>
+
+            <!-- Lazada -->
+            <h3 class="platform-dashboard-title">
+            <h3 class="platform-dashboard-title" onclick="toggleSection(this)">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/Lazada_%282019%29.svg" alt="Lazada Logo">
+                <span>Lazada</span>
+                <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <h3>Delivery Success (Count)</h3>
+                    <div class="stat-number" id="dash-lazada-wins-success" style="color: #2ecc71;">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Success (Amount)</h3>
+                    <div class="stat-number" id="dash-lazada-wins-success-total" style="color: #2ecc71;">₱0.00</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Failed (Count)</h3>
+                    <div class="stat-number" id="dash-lazada-wins-failed" style="color: #e74c3c;">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Failed (Amount)</h3>
+                    <div class="stat-number" id="dash-lazada-wins-failed-total" style="color: #e74c3c;">₱0.00</div>
+                </div>
+            </div>
+
+            <!-- Watsons -->
+            <h3 class="platform-dashboard-title">
+            <h3 class="platform-dashboard-title" onclick="toggleSection(this)">
+                <img src="https://www.liblogo.com/img-logo/wa1960w3f0-watsons-logo-watson-logo-.png" alt="Watsons Logo">
+                <span>Watsons</span>
+                <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <h3>Delivery Success (Count)</h3>
+                    <div class="stat-number" id="dash-watsons-wins-success" style="color: #2ecc71;">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Success (Amount)</h3>
+                    <div class="stat-number" id="dash-watsons-wins-success-total" style="color: #2ecc71;">₱0.00</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Failed (Count)</h3>
+                    <div class="stat-number" id="dash-watsons-wins-failed" style="color: #e74c3c;">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivery Failed (Amount)</h3>
+                    <div class="stat-number" id="dash-watsons-wins-failed-total" style="color: #e74c3c;">₱0.00</div>
                 </div>
             </div>
         </section>
@@ -1128,9 +1267,9 @@
                     <option value="50">50 rows</option>
                     <option value="100">100 rows</option>
                 </select>
-                <button id="prevBtn" onclick="changePage(-1)" style="padding: 8px 12px;">Previous</button>
+                <button id="prevBtn" onclick="changePage(-1)" style="padding: 6px 10px;">Previous</button>
                 <span id="pageInfo">Page 1 of 1</span>
-                <button id="nextBtn" onclick="changePage(1)" style="padding: 8px 12px;">Next</button>
+                <button id="nextBtn" onclick="changePage(1)" style="padding: 6px 10px;">Next</button>
             </div>
         </section>
 
@@ -1513,13 +1652,54 @@
 
     // --- Dashboard Logic ---
     function updateDashboard() {
-        const orderList = Object.values(orders);
-        document.getElementById('dash-total').innerText = orderList.length;
-        document.getElementById('dash-pending').innerText = orderList.filter(o => String(o.status).toLowerCase() !== 'delivered').length;
-        document.getElementById('dash-delivered').innerText = orderList.filter(o => String(o.status).toLowerCase() === 'delivered').length;
-        
-        const revenue = orderList.reduce((acc, curr) => acc + curr.total, 0);
-        document.getElementById('dash-revenue').innerText = '₱' + revenue.toFixed(2);
+        const allOrders = Object.values(orders);
+
+        // --- Update GLOBAL top cards ---
+        document.getElementById('dash-total').innerText = allOrders.length;
+        const totalRevenue = allOrders.reduce((acc, curr) => acc + (curr.total || 0), 0);
+        document.getElementById('dash-revenue').innerText = '₱' + totalRevenue.toFixed(2);
+
+        // --- Initialize stats object for all platforms ---
+        const platformStats = {
+            Tiktok: { successCount: 0, successTotal: 0, failedCount: 0, failedTotal: 0 },
+            Shopee: { successCount: 0, successTotal: 0, failedCount: 0, failedTotal: 0 },
+            Lazada: { successCount: 0, successTotal: 0, failedCount: 0, failedTotal: 0 },
+            Watsons: { successCount: 0, successTotal: 0, failedCount: 0, failedTotal: 0 }
+        };
+
+        // --- Calculate WINS status breakdown for each platform ---
+        allOrders.forEach(o => {
+            const platform = o.platform;
+            if (platformStats[platform]) {
+                const status = String(o.winsStatus || '').toLowerCase().trim();
+                if (status === 'delivery success') {
+                    platformStats[platform].successCount++;
+                    platformStats[platform].successTotal += (o.total || 0);
+                } else if (status === 'delivery failed') {
+                    platformStats[platform].failedCount++;
+                    platformStats[platform].failedTotal += (o.total || 0);
+                }
+            }
+        });
+
+        // --- Update DOM for each platform ---
+        for (const platform in platformStats) {
+            const stats = platformStats[platform];
+            const p = platform.toLowerCase(); // for ID construction
+
+            document.getElementById(`dash-${p}-wins-success`).innerText = stats.successCount;
+            document.getElementById(`dash-${p}-wins-success-total`).innerText = '₱' + stats.successTotal.toFixed(2);
+            document.getElementById(`dash-${p}-wins-failed`).innerText = stats.failedCount;
+            document.getElementById(`dash-${p}-wins-failed-total`).innerText = '₱' + stats.failedTotal.toFixed(2);
+        }
+    }
+
+    function toggleSection(header) {
+        header.classList.toggle('collapsed');
+        const grid = header.nextElementSibling;
+        if (grid && grid.classList.contains('dashboard-grid')) {
+            grid.classList.toggle('hidden');
+        }
     }
 
     // --- Platform Logic ---
