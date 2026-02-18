@@ -3056,29 +3056,58 @@
                 const rows = text.split(/\r\n|\n|\r/).map(r => r.trim()).filter(r => r);
                 
                 if (rows.length < 2) {
-                    throw new Error('CSV data is empty or invalid.');
+                    throw new Error('CSV data is empty or invalid (must have a header and at least one data row).');
                 }
 
-                // Detect Platform Column (Check first header)
+                // --- START VALIDATION PASS ---
+                const validationErrors = [];
+                const expectedColumnCount = 38; // Based on export format
+
+                for (let i = 1; i < rows.length; i++) {
+                    const rowNum = i + 1; // 1-based row number for user feedback
+                    let cols = rows[i].split('\t');
+                    if (cols.length === 1) cols = rows[i].split(',');
+
+                    if (cols.length !== expectedColumnCount) {
+                        validationErrors.push(`Row ${rowNum}: Invalid column count. Expected ${expectedColumnCount}, but found ${cols.length}.`);
+                        continue;
+                    }
+
+                    const orderId = cols[6] ? cols[6].trim() : '';
+                    const orderDate = cols[2] ? cols[2].trim() : '';
+                    const totalRetail = cols[37] ? cols[37].trim() : '';
+
+                    if (!orderId) {
+                        validationErrors.push(`Row ${rowNum}: 'Order Number' (column 7) cannot be empty.`);
+                    }
+                    if (!orderDate || isNaN(new Date(orderDate).getTime())) {
+                        validationErrors.push(`Row ${rowNum}: 'Order Date' (column 3) is missing or is not a valid date.`);
+                    }
+                    if (totalRetail === '' || isNaN(parseFloat(totalRetail))) {
+                        validationErrors.push(`Row ${rowNum}: 'Total Retail' (column 38) must be a valid number.`);
+                    }
+                }
+
+                if (validationErrors.length > 0) {
+                    const errorMessage = "CSV import failed. Please fix the following errors and try again:\n\n" + validationErrors.join("\n");
+                    alert(errorMessage);
+                    return; // Stop processing
+                }
+                // --- END VALIDATION PASS ---
+
+                // If validation passes, proceed with import.
                 const headerRow = rows[0].split(/,|\t/).map(h => h.trim().toLowerCase().replace(/"/g, ''));
                 const hasPlatformCol = headerRow[0] === 'platform';
                 const offset = hasPlatformCol ? 1 : 0;
 
                 let importedCount = 0;
-                // Start from index 1 to skip header
                 for (let i = 1; i < rows.length; i++) {
-                    // Support Tab (Excel) or Comma (CSV)
                     let cols = rows[i].split('\t');
                     if (cols.length === 1) cols = rows[i].split(',');
 
-                    // Need at least enough columns to reach ID (index 5 + offset)
-                    if (cols.length <= (5 + offset)) continue;
-
-                    // Mapping based on the 37-column structure
-                    const idIdx = 5 + offset;
-                    const id = cols[idIdx] ? cols[idIdx].trim() : `IMP-${Date.now()}-${i}`;
+                    // We now know the format is valid, so we can be less defensive.
+                    const id = cols[6].trim();
                     
-                    // Determine Platform
                     let platform = currentPlatform;
                     if (hasPlatformCol && cols[0]) {
                         const pVal = cols[0].trim().toLowerCase();
@@ -3091,10 +3120,11 @@
                     const newOrder = { id: id, platform: platform, customer: 'Imported' };
 
                     columnKeys.forEach((key, index) => {
+                        // The offset logic is correct for the 38-column format where platform is first.
                         const colIndex = index + offset;
                         if (key && colIndex < cols.length) {
                             let val = cols[colIndex] ? cols[colIndex].trim() : '';
-                            if (val === '-') val = ''; // Treat placeholder '-' as an empty field
+                            if (val === '-') val = '';
                             
                             if (key === 'items') val = parseInt(val) || 0;
                             if (key === 'total' || key === 'cost') val = parseFloat(val) || 0;
@@ -3111,6 +3141,7 @@
                 renderOrderList();
                 updateDashboard();
                 showNotification(`Successfully imported ${importedCount} orders.`, 'success');
+
             } catch (error) {
                 console.error(error);
                 showNotification(error.message || 'Failed to process CSV data.', 'error');
