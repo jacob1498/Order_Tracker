@@ -816,6 +816,15 @@
             --sidebar-bg: #c7ceea;
         }
 
+        /* Pastel Teal Theme */
+        body.theme-pastel-teal {
+            --primary-color: #1abc9c;
+            --text-color: #2c3e50;
+            --bg-color: #e8f8f5;
+            --card-bg: #ffffff;
+            --sidebar-bg: #48c9b0;
+        }
+
         /* Shared Dark Theme Styles (Black & Navy) */
         body.theme-black .stat-card, 
         body.theme-black .table-container,
@@ -906,9 +915,33 @@
         /* Top Header & Profile Dropdown */
         .top-header {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
             position: relative;
+        }
+
+        /* Real-time Clock */
+        .real-time-clock {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .clock-time {
+            font-size: 26px;
+            font-weight: 300;
+            color: var(--text-color);
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .clock-date {
+            font-size: 11px;
+            color: var(--text-color);
+            opacity: 0.5;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 2px;
         }
 
         .profile-dropdown {
@@ -1314,6 +1347,10 @@
         
         <!-- Top Header (Profile) -->
         <header id="topHeader" class="top-header" style="display: none;">
+            <div class="real-time-clock">
+                <div class="clock-time" id="clockTime">--:--:--</div>
+                <div class="clock-date" id="clockDate">---, --- --</div>
+            </div>
             <div class="profile-dropdown">
                 <div class="profile-trigger" onclick="toggleProfileMenu(event)">
                     <div class="profile-avatar" id="headerAvatar">A</div>
@@ -1933,6 +1970,7 @@
                         <button onclick="applyTheme('navy')">Navy</button>
                         <button onclick="applyTheme('cream')">Cream</button>
                         <button onclick="applyTheme('pastel')">Pastel</button>
+                        <button onclick="applyTheme('pastel-teal')">Pastel Teal</button>
                     </div>
                 </div>
             </div>
@@ -3138,7 +3176,7 @@
     // --- Theme Logic ---
     function applyTheme(themeName) {
         // Remove all theme classes
-        document.body.classList.remove('theme-black', 'theme-navy', 'theme-cream', 'theme-pastel');
+        document.body.classList.remove('theme-black', 'theme-navy', 'theme-cream', 'theme-pastel', 'theme-pastel-teal');
         
         if (themeName !== 'light') {
             document.body.classList.add('theme-' + themeName);
@@ -3200,6 +3238,34 @@
             showView(savedView);
         }
     })();
+
+    // Real-time Clock
+    function startClock() {
+        function update() {
+            const now = new Date();
+            const timeEl = document.getElementById('clockTime');
+            const dateEl = document.getElementById('clockDate');
+            const greetingEl = document.getElementById('clockGreeting');
+            
+            if (timeEl && dateEl) {
+                timeEl.innerText = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                dateEl.innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            }
+            
+            if (greetingEl) {
+                const hour = now.getHours();
+                let greeting = 'Good Morning';
+                if (hour >= 12 && hour < 18) greeting = 'Good Afternoon';
+                else if (hour >= 18) greeting = 'Good Evening';
+                
+                const user = getUserData();
+                greetingEl.innerText = `${greeting}, ${user.username}`;
+            }
+        }
+        update();
+        setInterval(update, 1000);
+    }
+    startClock();
 
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
