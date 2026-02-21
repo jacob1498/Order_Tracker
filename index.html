@@ -1855,7 +1855,7 @@
                             <th>Delivery Date</th>
                             <th>Ageing Days</th>
                             <th>Order Number</th>
-                            <th id="platformIdHeader">Tiktok Order ID</th>
+                            <th id="platformIdHeader">Order ID</th>
                             <th>Units Shipped</th>
                             <th>MOP</th>
                             <th>SC Order Status</th>
@@ -1874,11 +1874,7 @@
                             <th>Ticket Number</th>
                             <th>Date Filed</th>
                             <th>Feedback Date</th>
-                            <th>DF Claims Status</th>
-                            <th>Del-Failed Reason</th>
                             <th>Return/Refund</th>
-                            <th>RR Claims Status</th>
-                            <th>Claims Reason</th>
                             <th>Tracking No.</th>
                             <th>Logistics Del</th>
                             <th>Region</th>
@@ -2030,15 +2026,7 @@
 
 <script>
     // Mock Database
-    let orders = JSON.parse(localStorage.getItem('ordersData')) || {
-        '1001': { id: '1001', platform: 'Tiktok', customer: 'Alice Smith', status: 'Delivered', winsStatus: 'Delivery Success', date: '2023-10-28', total: 120.50, items: 3 },
-        '1002': { id: '1002', platform: 'Tiktok', customer: 'Bob Jones', status: 'Shipped', winsStatus: 'Intransit', date: '2023-11-02', total: 45.00, items: 1 },
-        '1003': { id: '1003', platform: 'Tiktok', customer: 'Charlie Day', status: 'Processing', winsStatus: 'Intransit', date: '2023-11-05', total: 210.99, items: 5 },
-        '1004': { id: '1004', platform: 'Tiktok', customer: 'Dana White', status: 'Placed', winsStatus: 'Intransit', date: '2023-11-10', total: 15.00, items: 1 },
-        '2001': { id: '2001', platform: 'Shopee', customer: 'Eve Polastri', status: 'Placed', winsStatus: 'Delivery Failed', date: '2023-11-12', total: 35.00, items: 2 },
-        '3001': { id: '3001', platform: 'Lazada', customer: 'Frank Castle', status: 'Shipped', winsStatus: 'Intransit', date: '2023-11-14', total: 80.00, items: 1 },
-        '4001': { id: '4001', platform: 'Watsons', customer: 'Grace Shelby', status: 'Delivered', winsStatus: 'Delivery Success', date: '2023-11-16', total: 25.50, items: 4 }
-    };
+    let orders = JSON.parse(localStorage.getItem('ordersData')) || {};
     let currentPage = 1;
     let itemsPerPage = 50;
     let currentSort = { column: null, direction: 'asc' };
@@ -2073,11 +2061,7 @@
         'ticketNumber', // 23
         'dateFiled', // 24
         'feedbackDate', // 25
-        'dfClaimsStatus', // 26
-        'delFailedReason', // 27
         'returnRefund', // 28
-        'rrClaimsStatus', // 29
-        'claimsReason', // 30
         'trackingNo', // 31
         'logisticsDel', // 32
         'region', // 33
@@ -2668,7 +2652,7 @@
 
         // Update Header Text
         const header = document.getElementById('platformIdHeader');
-        if(header) header.innerText = platform === 'All' ? 'Platform Order ID' : `${platform} Order ID`;
+        if(header) header.innerText = 'Order ID';
 
         // Reset and Render
         currentPage = 1;
@@ -2723,6 +2707,16 @@
         if (currentPage > totalPages) currentPage = totalPages;
         if (currentPage < 1) currentPage = 1;
 
+        if (filteredOrders.length === 0) {
+            const colCount = document.querySelectorAll('#ordersTable thead th').length;
+            tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; padding: 30px; color: #95a5a6;">No data found</td></tr>`;
+            document.getElementById('pageInfo').innerText = `Page 0 of 0`;
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            if(document.getElementById('tableTotalCount')) document.getElementById('tableTotalCount').innerText = `Total: 0`;
+            return;
+        }
+
         const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
         paginatedOrders.forEach(order => {
@@ -2760,11 +2754,7 @@
                 <td>${order.ticketNumber || '-'}</td>
                 <td>${order.dateFiled || '-'}</td>
                 <td>${order.feedbackDate || '-'}</td>
-                <td>${order.dfClaimsStatus || '-'}</td>
-                <td>${order.delFailedReason || '-'}</td>
                 <td>${order.returnRefund || '-'}</td>
-                <td>${order.rrClaimsStatus || '-'}</td>
-                <td>${order.claimsReason || '-'}</td>
                 <td>${order.trackingNo || '-'}</td>
                 <td>${order.logisticsDel || '-'}</td>
                 <td>${order.region || '-'}</td>
@@ -2876,8 +2866,8 @@
             case 5: return order.id;
             case 7: return order.items;
             case 9: return order.status;
-            case 35: return order.total * 0.7;
-            case 36: return order.total;
+            case 32: return order.total * 0.7;
+            case 33: return order.total;
             default: return '';
         }
     }
@@ -3435,7 +3425,7 @@
 
         let csvContent = "data:text/csv;charset=utf-8,";
         // The header is static and matches the import format
-        csvContent += "Platform,Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Tiktok Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,DF Claims Status,Del-Failed Reason,Return/Refund,RR Claims Status,Claims Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail\n";
+        csvContent += "Platform,Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,DF Claims Status,Del-Failed Reason,Return/Refund,RR Claims Status,Claims Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail\n";
 
         // Helper to safely get value and handle commas for CSV
         const sanitize = (val) => {
@@ -3507,7 +3497,7 @@
 
     // --- Data Import/Export ---
     function downloadSampleCSV() {
-        const headers = "Platform,Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Tiktok Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,DF Claims Status,Del-Failed Reason,Return/Refund,RR Claims Status,Claims Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail";
+        const headers = "Platform,Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,DF Claims Status,Del-Failed Reason,Return/Refund,RR Claims Status,Claims Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail";
         
         const rows = [
             "Tiktok,Oct,2023-10-01,,,25,ORD-001,,2,COD,Delivered,,,,,,,,,,,,,,,,,,,,,,,,,,1050.00,1500.00",
@@ -3523,6 +3513,62 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    function parseFullCSV(text) {
+        const rows = [];
+        let currentRow = [];
+        let currentField = '';
+        let inQuotedField = false;
+        
+        // Detect delimiter
+        const firstLineEnd = text.indexOf('\n');
+        const sample = text.substring(0, firstLineEnd > -1 ? firstLineEnd : 5000);
+        const commaCount = (sample.match(/,/g) || []).length;
+        const tabCount = (sample.match(/\t/g) || []).length;
+        const delimiter = tabCount > commaCount ? '\t' : ',';
+
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            const nextChar = text[i + 1];
+
+            if (inQuotedField) {
+                if (char === '"') {
+                    // Check for escaped quote ("")
+                    if (nextChar === '"') {
+                        currentField += '"';
+                        i++; // Skip next quote
+                    } else {
+                        // End of quoted field
+                        inQuotedField = false;
+                    }
+                } else {
+                    currentField += char;
+                }
+            } else {
+                if (char === '"' && currentField.length === 0) {
+                    inQuotedField = true;
+                } else if (char === delimiter) {
+                    currentRow.push(currentField);
+                    currentField = '';
+                } else if (char === '\r' || char === '\n') {
+                    if (char === '\r' && nextChar === '\n') i++;
+                    currentRow.push(currentField);
+                    rows.push(currentRow);
+                    currentRow = [];
+                    currentField = '';
+                } else {
+                    currentField += char;
+                }
+            }
+        }
+        
+        if (currentField || currentRow.length > 0) {
+            currentRow.push(currentField);
+            rows.push(currentRow);
+        }
+        
+        return rows.filter(r => r.length > 1 || (r.length === 1 && r[0].trim() !== ''));
     }
 
     function handleFileUpload(input) {
@@ -3545,7 +3591,7 @@
         // Use setTimeout to allow the UI to render the loader before processing
         setTimeout(() => {
             try {
-                const rows = text.split(/\r\n|\n|\r/).map(r => r.trim()).filter(r => r);
+                const rows = parseFullCSV(text);
                 
                 if (rows.length < 2) {
                     throw new Error('CSV data is empty or invalid (must have a header and at least one data row).');
@@ -3554,13 +3600,14 @@
                 // --- START VALIDATION PASS ---
                 const validationErrors = [];
                 const expectedColumnCount = 38; // Based on export format
-                const headerRow = rows[0].split(/,|\t/).map(h => h.trim().toLowerCase().replace(/"/g, ''));
+
+                // Header Parsing
+                const headerRow = rows[0].map(h => h.trim().toLowerCase());
                 const hasPlatformCol = headerRow[0] === 'platform';
 
                 for (let i = 1; i < rows.length; i++) {
                     const rowNum = i + 1; // 1-based row number for user feedback
-                    let cols = rows[i].split('\t');
-                    if (cols.length === 1) cols = rows[i].split(',');
+                    const cols = rows[i];
 
                     if (cols.length !== expectedColumnCount) {
                         validationErrors.push(`Row ${rowNum}: Invalid column count. Expected ${expectedColumnCount}, but found ${cols.length}.`);
@@ -3611,8 +3658,7 @@
 
                 let importedCount = 0;
                 for (let i = 1; i < rows.length; i++) {
-                    let cols = rows[i].split('\t');
-                    if (cols.length === 1) cols = rows[i].split(',');
+                    const cols = rows[i];
 
                     // We now know the format is valid, so we can be less defensive.
                     const id = cols[6].trim();
