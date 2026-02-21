@@ -1415,10 +1415,25 @@
                     </div>
                 </div>
                 
-                <div class="tracker-container" style="flex: 3; min-width: 300px; margin: 0; max-width: none;">
+                <div class="tracker-container" style="flex: 2; min-width: 300px; margin: 0; max-width: none;">
                     <h3>Delivery Status Distribution</h3>
                     <div style="height: 200px;">
                         <canvas id="overviewChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="tracker-container" style="flex: 2; min-width: 300px; margin: 0; max-width: none;">
+                    <h3>Claims Status Distribution</h3>
+                    <div style="height: 200px;">
+                        <canvas id="claimsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="tracker-container" style="flex: 2; min-width: 300px; margin: 0; max-width: none;">
+                    <h3>Orders by Platform</h3>
+                    <div style="height: 200px; display: flex; align-items: center;">
+                        <div style="flex: 1; height: 100%; position: relative;"><canvas id="platformChart"></canvas></div>
+                        <div id="platformChartLegend" style="width: 120px; padding-left: 10px; display: flex; flex-direction: column; justify-content: center; gap: 8px;"></div>
                     </div>
                 </div>
             </div>
@@ -2028,6 +2043,8 @@
     let itemsPerPage = 50;
     let currentSort = { column: null, direction: 'asc' };
     let overviewChartInstance = null;
+    let claimsChartInstance = null;
+    let platformChartInstance = null;
     
     // Column Mapping for Editing and Rendering
     const columnKeys = [
@@ -2434,6 +2451,8 @@
 
         // Render Overview Chart
         renderOverviewChart(platformStats);
+        renderClaimsChart(platformStats);
+        renderPlatformChart(platformStats);
     }
 
     function renderOverviewChart(stats) {
@@ -2479,6 +2498,116 @@
                     legend: { position: 'bottom' }
                 }
             }
+        });
+    }
+
+    function renderClaimsChart(stats) {
+        const ctx = document.getElementById('claimsChart').getContext('2d');
+        const platforms = ['Tiktok', 'Shopee', 'Lazada', 'Watsons'];
+        
+        const dataPending = platforms.map(p => stats[p].pendingClaimsCount);
+        const dataApproved = platforms.map(p => stats[p].approvedClaimsCount);
+        const dataInvalid = platforms.map(p => stats[p].invalidClaimsCount);
+
+        if (claimsChartInstance) claimsChartInstance.destroy();
+
+        claimsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: platforms,
+                datasets: [
+                    {
+                        label: 'Pending',
+                        data: dataPending,
+                        backgroundColor: '#f39c12'
+                    },
+                    {
+                        label: 'Approved',
+                        data: dataApproved,
+                        backgroundColor: '#1abc9c'
+                    },
+                    {
+                        label: 'Invalid',
+                        data: dataInvalid,
+                        backgroundColor: '#95a5a6'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true }
+                },
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    function renderPlatformChart(stats) {
+        const ctx = document.getElementById('platformChart').getContext('2d');
+        const platforms = ['Tiktok', 'Shopee', 'Lazada', 'Watsons'];
+        const logos = {
+            'Tiktok': 'https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg',
+            'Shopee': 'https://upload.wikimedia.org/wikipedia/commons/f/fe/Shopee.svg',
+            'Lazada': 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Lazada_%282019%29.svg',
+            'Watsons': 'https://upload.wikimedia.org/wikipedia/commons/d/dd/Watsons_logotype.svg'
+        };
+        
+        const data = platforms.map(p => {
+            return stats[p].successCount + stats[p].failedCount + stats[p].intransitCount;
+        });
+
+        if (platformChartInstance) platformChartInstance.destroy();
+
+        platformChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: platforms,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        '#333333', // Tiktok
+                        '#ee4d2d', // Shopee
+                        '#10156e', // Lazada
+                        '#009c9c'  // Watsons
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Generate Custom Legend
+        const legendContainer = document.getElementById('platformChartLegend');
+        legendContainer.innerHTML = '';
+        
+        platforms.forEach((p, index) => {
+            const item = document.createElement('div');
+            item.style.cssText = 'display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; color: var(--text-color);';
+            item.onclick = () => {
+                const meta = platformChartInstance.getDatasetMeta(0);
+                meta.data[index].hidden = !meta.data[index].hidden;
+                platformChartInstance.update();
+                item.style.opacity = meta.data[index].hidden ? '0.5' : '1';
+            };
+
+            const img = document.createElement('img');
+            img.src = logos[p];
+            img.style.cssText = 'width: 35px; height: 35px; object-fit: contain;';
+            
+            item.appendChild(img);
+            item.appendChild(document.createTextNode(data[index]));
+            legendContainer.appendChild(item);
         });
     }
 
