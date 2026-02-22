@@ -1410,6 +1410,10 @@
                 
                 <div class="tracker-container" style="flex: 2; min-width: 300px; margin: 0; max-width: none;">
                     <h3>Delivery Status Distribution</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>Delivery Status Distribution</h3>
+                        <button onclick="downloadChart('overviewChart')" class="icon-btn" style="width: 28px; height: 28px; font-size: 14px; border: none;" title="Save Chart">📷</button>
+                    </div>
                     <div style="height: 200px;">
                         <canvas id="overviewChart"></canvas>
                     </div>
@@ -1417,6 +1421,10 @@
 
                 <div class="tracker-container" style="flex: 2; min-width: 300px; margin: 0; max-width: none;">
                     <h3>Claims Status Distribution</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>Claims Status Distribution</h3>
+                        <button onclick="downloadChart('claimsChart')" class="icon-btn" style="width: 28px; height: 28px; font-size: 14px; border: none;" title="Save Chart">📷</button>
+                    </div>
                     <div style="height: 200px;">
                         <canvas id="claimsChart"></canvas>
                     </div>
@@ -1424,6 +1432,10 @@
 
                 <div class="tracker-container" style="flex: 2; min-width: 300px; margin: 0; max-width: none;">
                     <h3>Orders by Platform</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>Orders by Platform</h3>
+                        <button onclick="downloadChart('platformChart')" class="icon-btn" style="width: 28px; height: 28px; font-size: 14px; border: none;" title="Save Chart">📷</button>
+                    </div>
                     <div style="height: 200px; display: flex; align-items: center;">
                         <div style="flex: 1; height: 100%; position: relative;"><canvas id="platformChart"></canvas></div>
                         <div id="platformChartLegend" style="width: 120px; padding-left: 10px; display: flex; flex-direction: column; justify-content: center; gap: 8px;"></div>
@@ -1944,6 +1956,11 @@
                 </div>
                 <button class="btn-block" onclick="renderManualChart()">Generate Chart</button>
                 <div style="margin-top: 30px;">
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-block" onclick="renderManualChart()" style="flex: 1;">Generate Chart</button>
+                    <button onclick="downloadChart('customChartCanvas')" class="icon-btn" style="width: 50px; border: 1px solid var(--primary-color);" title="Save Chart">📷</button>
+                </div>
+                <div style="margin-top: 20px;">
                     <canvas id="customChartCanvas"></canvas>
                 </div>
             </div>
@@ -2726,24 +2743,11 @@
             const today = new Date();
             const ageing = Math.floor((today - dateObj) / (1000 * 60 * 60 * 24));
 
-            // Platform Icon Helper
-            const getPlatformIcon = (p) => {
-                const logos = {
-                    'Tiktok': 'T_logo.png',
-                    'Shopee': 'S_logo.png',
-                    'Lazada': 'L_logo.png',
-                    'Watsons': 'W_logo.png'
-                };
-                const src = logos[p];
-                if (src) return `<img src="${src}" alt="${p}" title="${p}" style="width: 24px; height: 24px; object-fit: contain;">`;
-                return p ? p.charAt(0).toUpperCase() : '-';
-            };
-
             const tr = document.createElement('tr');
             tr.ondblclick = () => enableEditRow(tr, order.id);
             tr.innerHTML = `
                 <td><input type="checkbox" class="order-checkbox" value="${order.id}"></td>
-                <td style="text-align: center;">${getPlatformIcon(order.platform)}</td>
+                <td style="text-align: center;">${order.platform || '-'}</td>
                 <td>${month}</td>
                 <td>${order.date}</td>
                 <td>${order.shipDateTime || '-'}</td>
@@ -3521,6 +3525,18 @@
         document.body.removeChild(link);
     }
 
+    function downloadChart(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        
+        const link = document.createElement('a');
+        link.download = `${canvasId}_${new Date().toISOString().split('T')[0]}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     // --- Data Import/Export ---
     function downloadSampleCSV() {
         const headers = "Platform,Month,Order Date,Ship Date Time,Delivery Date,Ageing Days,Order Number,Order ID,Units Shipped,MOP,SC Order Status,SC Order Sub Status,OMM Customer Order Status,OMM Consignment Status,WINS Status,Sales/TLOG,RTS PO NO,RTS PO Status,Return Status,Return Reason,Cancel Reason,Physical Stocks,RTV Date Endorse to IC,Ticket Number,Date Filed,Feedback Date,Claims Status,Claims Reasons,Return/Refund,DF Claims Status,Del-Failed Reason,Tracking No.,Logistics Del,Region,Province,Order Status Final Remarks,Total Cost,Total Retail";
@@ -3808,5 +3824,3 @@
 </html>
 
  
-
-
