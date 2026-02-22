@@ -3542,7 +3542,15 @@
         
         document.getElementById('storageUsageText').innerText = `Usage: ${usedKB} KB / ${totalMB} MB`;
         document.getElementById('storagePercentText').innerText = `${percent}%`;
-        document.getElementById('storageProgressBar').style.width = `${percent}%`;
+        const progressBar = document.getElementById('storageProgressBar');
+        progressBar.style.width = `${percent}%`;
+
+        if (parseFloat(percent) >= 90) {
+            progressBar.style.backgroundColor = '#e74c3c';
+            showNotification("⚠️ Storage usage exceeds 90%!", "error");
+        } else {
+            progressBar.style.backgroundColor = 'var(--primary-color)';
+        }
         
         // Estimate Rows
         const orderCount = Object.keys(orders).length;
@@ -3552,7 +3560,12 @@
         const remainingBytes = MAX_BYTES - totalUsed;
         const estimatedRows = Math.max(0, Math.floor(remainingBytes / avgOrderSize));
         
-        document.getElementById('storageRowsText').innerText = `Estimated capacity: ~${estimatedRows.toLocaleString()} more rows based on current data size`;
+        const rowsText = document.getElementById('storageRowsText');
+        rowsText.innerHTML = `Estimated capacity: ~${estimatedRows.toLocaleString()} more rows based on current data size`;
+        
+        if (parseFloat(percent) >= 90) {
+            rowsText.innerHTML += '<br><strong style="color: #e74c3c;">⚠️ Critical Storage Level: Please backup and clear old data.</strong>';
+        }
     }
 
     // --- Data Import/Export ---
