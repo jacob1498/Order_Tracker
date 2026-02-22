@@ -1981,6 +1981,20 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="tracker-container" style="margin-top: 20px;">
+                <h3>Storage Status</h3>
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; color: var(--text-color);">
+                        <span id="storageUsageText">Usage: 0 KB / 5 MB</span>
+                        <span id="storagePercentText">0%</span>
+                    </div>
+                    <div style="width: 100%; background-color: #eee; height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div id="storageProgressBar" style="height: 100%; width: 0%; background-color: var(--primary-color); transition: width 0.3s;"></div>
+                    </div>
+                    <p id="storageRowsText" style="font-size: 12px; color: #7f8c8d; margin-top: 8px;">Estimated capacity: Calculating...</p>
+                </div>
+            </div>
         </section>
 
         <!-- 8. Profile View -->
@@ -2269,6 +2283,9 @@
         if (viewName === 'report') {
             generateReport();
             if(document.getElementById('manualReportBody').children.length === 0) loadManualData();
+        }
+        if (viewName === 'settings') {
+            updateStorageInfo();
         }
 
         // Persist View
@@ -3506,6 +3523,36 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    function updateStorageInfo() {
+        // Approximate limit for localStorage (5MB is standard safe limit)
+        const MAX_BYTES = 5 * 1024 * 1024; 
+        let totalUsed = 0;
+        
+        for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                totalUsed += (localStorage[key].length + key.length);
+            }
+        }
+
+        const usedKB = (totalUsed / 1024).toFixed(2);
+        const totalMB = (MAX_BYTES / (1024 * 1024)).toFixed(0);
+        const percent = Math.min(100, (totalUsed / MAX_BYTES) * 100).toFixed(1);
+        
+        document.getElementById('storageUsageText').innerText = `Usage: ${usedKB} KB / ${totalMB} MB`;
+        document.getElementById('storagePercentText').innerText = `${percent}%`;
+        document.getElementById('storageProgressBar').style.width = `${percent}%`;
+        
+        // Estimate Rows
+        const orderCount = Object.keys(orders).length;
+        // Default estimate if empty (approx 1KB per order is a safe upper bound for calculation)
+        let avgOrderSize = orderCount > 0 ? (JSON.stringify(orders).length / orderCount) : 1000;
+        
+        const remainingBytes = MAX_BYTES - totalUsed;
+        const estimatedRows = Math.max(0, Math.floor(remainingBytes / avgOrderSize));
+        
+        document.getElementById('storageRowsText').innerText = `Estimated capacity: ~${estimatedRows.toLocaleString()} more rows based on current data size`;
     }
 
     // --- Data Import/Export ---
